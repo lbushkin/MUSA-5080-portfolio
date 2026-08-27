@@ -2,7 +2,7 @@
 title: "Home"
 ---
 
-# YOUR NAME HERE {#welcome}
+# Luca Bushkin {#welcome}
 
 <!-- CHANGE THIS: replace with your own name above -->
 
@@ -17,8 +17,8 @@ urban policy questions.
 
 <!-- CHANGE THIS: two or three sentences about yourself -->
 
-I'm a student in the MUSA program at Penn. My background is in
-[YOUR BACKGROUND], and I'm interested in [YOUR INTERESTS].
+I'm a student in the MCP program at Penn. My background is in
+Environmental Studies, and I'm interested in urban sustainability and multimodal transportation.
 
 ## What You'll Find Here
 
@@ -30,5 +30,5 @@ I'm a student in the MUSA program at Penn. My background is in
 
 <!-- CHANGE THIS -->
 
-- Email: your-email@upenn.edu
-- GitHub: [@your-username](https://github.com/your-username)
+- Email: lbushkin@upenn.edu
+- GitHub: [@lbushkin](https://github.com/lbushkin)
