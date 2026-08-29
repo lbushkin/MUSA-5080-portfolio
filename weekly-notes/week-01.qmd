@@ -35,9 +35,9 @@ sessionInfo()$R.version$version.string
 
 <!-- CHANGE THIS: 3-4 sentences -->
 
-What I want out of this course:
+What I want out of this course: I would like to gain a better understanding of when and how to apply various analytical techniques to complex datasets. I would also like to become more comfortable using R and GitHub.
 
-One thing I'm nervous about:
+One thing I'm nervous about: I am nervous about the final project. 
 
 ## Questions I Still Have
 
