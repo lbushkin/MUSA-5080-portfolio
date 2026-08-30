@@ -6,10 +6,10 @@ title: "Home"
 
 <!-- CHANGE THIS: replace with your own name above -->
 
-Welcome to my portfolio for **MUSA 5080: Public Policy Analytics** at the
+Welcome to my portfolio for **MUSA 5080/CPLN 5920: Public Policy Analytics** at the
 University of Pennsylvania.
 
-This site documents my work in the Master of Urban Spatial Analytics program —
+This site documents my work in the course —
 weekly notes, course assignments, and a final project applying data analysis to
 urban policy questions.
 
