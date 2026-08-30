@@ -67,7 +67,7 @@
     "href": "weekly-notes/week-01.html#questions-i-still-have",
     "title": "Week 1: Getting Set Up",
     "section": "Questions I Still Have",
-    "text": "Questions I Still Have"
+    "text": "Questions I Still Have\n\nWhat is Quarto, and what is its role in this process?"
   },
   {
     "objectID": "about.html",
@@ -159,5 +159,12 @@
     "title": "Week 2: Census Data",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have"
+  },
+  {
+    "objectID": "weekly-notes/week-01.html#one-thing-i-learned-friday",
+    "href": "weekly-notes/week-01.html#one-thing-i-learned-friday",
+    "title": "Week 1: Getting Set Up",
+    "section": "One Thing I Learned Friday",
+    "text": "One Thing I Learned Friday\nI learned that GitHub is not just for posting code and research projects."
   }
 ]

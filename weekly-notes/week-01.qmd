@@ -41,5 +41,8 @@ One thing I'm nervous about: I am nervous about the final project.
 
 ## Questions I Still Have
 
--
--
+- What is Quarto, and what is its role in this process?
+
+## One Thing I Learned Friday
+
+I learned that GitHub is not just for posting code and research projects.
