@@ -51,7 +51,7 @@ filter(pa_income, estimate < 50000)
 
 #Step 5: select()####
 
-#I predict the number of rows will change
+#I predict the number of columns will change
 
 select(pa_income, NAME, estimate, moe)
 
@@ -78,7 +78,7 @@ pa_income
 
 #Step 7: arrange() #####
 
-#I predict neither of these actions will change the number of rows 
+#I predict neither of these actions will change the number of rows
 
 arrange(pa_income, moe_pct)
 
@@ -174,4 +174,4 @@ pa_wide %>%
   select(NAME, popE, incomeE, moe_pct) %>%
   head(10)
 
-#Smaller counties do not necessarily have larger margins of error 
+#Smaller counties do not necessarily have larger margins of error
