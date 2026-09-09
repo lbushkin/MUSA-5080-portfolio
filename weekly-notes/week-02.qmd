@@ -14,15 +14,15 @@ Reviewed various dplyr functions using a Pennsylvania ACS dataset.
 
 Overview of functions used in class:
 
-dim(): dimensions (i.e. rows x columns)
-glimpse(): preview of dataset
-head(): first few rows of dataset
-filter(): selects rows of data based on given threshold
-select(): selects specified columns
-mutate(): add/create a new column
-arrange(): rearrange rows in a new order (descending, ascending) based on a category
-group_by(): changes the unit of analysis; sorts the data into specified categorization
-case_when(): allows you sort data into multiple categories
+- dim(): dimensions (i.e. rows x columns)
+- glimpse(): preview of dataset
+- head(): first few rows of dataset
+- filter(): selects rows of data based on given threshold
+- select(): selects specified columns
+- mutate(): add/create a new column
+- arrange(): rearrange rows in a new order (descending, ascending) based on a category
+- group_by(): changes the unit of analysis; sorts the data into specified categorization
+- case_when(): allows you sort data into multiple categories
 
 
 ## Reflection
@@ -33,5 +33,5 @@ I didn't expect I would already be a little bit rusty using dplyr functions afte
 
 ## Questions I Still Have
 
-- 
+-
 -
