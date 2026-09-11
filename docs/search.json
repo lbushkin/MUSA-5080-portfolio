@@ -109,7 +109,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -240,28 +240,28 @@
   {
     "objectID": "weekly-notes/week-03.html",
     "href": "weekly-notes/week-03.html",
-    "title": "Week 3:",
+    "title": "Week 3: GGPLOT & Addressing Margins of Error",
     "section": "",
-    "text": "Here."
+    "text": "Went over the basic elements and syntax of using ggplot for data visualization. Discussed how to properly address margins of error in ACS data."
   },
   {
     "objectID": "weekly-notes/week-03.html#what-we-did",
     "href": "weekly-notes/week-03.html#what-we-did",
-    "title": "Week 3:",
+    "title": "Week 3: GGPLOT & Addressing Margins of Error",
     "section": "",
-    "text": "Here."
+    "text": "Went over the basic elements and syntax of using ggplot for data visualization. Discussed how to properly address margins of error in ACS data."
   },
   {
     "objectID": "weekly-notes/week-03.html#key-concepts",
     "href": "weekly-notes/week-03.html#key-concepts",
-    "title": "Week 3:",
+    "title": "Week 3: GGPLOT & Addressing Margins of Error",
     "section": "Key Concepts",
-    "text": "Key Concepts\nHere."
+    "text": "Key Concepts\nVisualizing data is important because different datasets can have similar (or even identical) summary statistics but look very different (i.e. Ansombe’s Quartet).\n\nA plot is a mapping from columns in a dataset to visual properties on a page. Known as “Grammer of Graphics” (“GG”).\nEx: estimate column -&gt; position on y-axis, population column -&gt; postition on x-axis\n\nGGPLOT Basics plot1 &lt;- ggplot(data) + this creates a blank canvas with your data as reference aes() + despite the name, “aesthetics” refers to column assignment geom_something() shape/type of chart\n“Decorations” (i.e. colors, etc.) go in geom_*() portion of code, not aes()\nOptions for geom:\n\nhistogram\npoint (for scatterplot)\nboxplot\ncol (for barchart)\nline\nerrorbar\n\nCombining 2 geom:\n\nEach type has its own aes specfications\nEx: geom_col() has aes( x = somevalue, y = somevalue), while geom_errorbar() has aes(ymin = somevalue, ymax = somevalue)\n\nExtra:\n\nfacet_wrap() for creating multiple charts side-by-side for comparison\ncoord_flip() to flip x and y axis orientation\nmutate(str_remove(column, “__“)) to remove some text/edit a column\nCan use theme_minimal() for graphs as a shortcut for nice aesthetics\nlabs() for the labels of a graph\n\nCensus Bureau uses coefficient of variation (“CV”).\n\nCV is a relative measure of sampling error, tied to the 90% confidence interval.\nCensus assumes a low CV of 15% (high reliability), medium of 15-30%, and high &gt; 30% (low reliability, high sampling error)\n\nDerived uncertainty\n\nCannot simply add up or multiply margins of error when comparing different estimates\nIn tidycensus: moe_sum() will properly add moe’s for different estimates\n\nAlso: moe_prop() for one estimate as a share of another, and moe_ratio() for ratio of 2 variables\n\n\nChange over time with ACS data\n\n5-year ACS estimates have overlapping time periods when comparing years that are close together (ex: 2023 and 2022)\nInstead, use ACS years that do not have overlapping periods (ex: 2018 and 2023)\nStandard error of difference and confidence interval of change to determine if the difference in estimates between years is real (i.e. does not include zero)"
   },
   {
     "objectID": "weekly-notes/week-03.html#questions-i-still-have",
     "href": "weekly-notes/week-03.html#questions-i-still-have",
-    "title": "Week 3:",
+    "title": "Week 3: GGPLOT & More Margins of Error",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have\n\nW"
   }
