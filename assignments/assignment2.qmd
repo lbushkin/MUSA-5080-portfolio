@@ -1,0 +1,169 @@
+---
+title: "Assignment 2: Who Do We Know the Least About?"
+subtitle: "Measuring uncertainty in American Community Survey data"
+author: "Luca Bushkin"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: false
+execute:
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+
+---
+
+## The question
+
+Every number the American Community Survey publishes is an estimate drawn from a
+sample, not a count. That means every number comes with a margin of error — a
+statement about how wrong it might be.
+
+Most people ignore it. In this assignment, you won't.
+
+In this analysis, I look at women whose income was below the poverty level in the past 12 months across counties in New York, and ask which communities we measure most and least reliably. Data collected on vulnerable populations can be used both to understand and provide necessary resources to those populations, so the reliability of the data is important for ensuring that those populations are accurately represented.
+
+---
+
+## Choosing what to measure
+
+
+```{r}
+my_state <- "NY"        # two-letter abbreviation, in quotes
+my_variable <- "B17001_017"     # the variable code, in quotes
+```
+
+## Pulling the data
+
+```{r}
+county_data <- get_acs(
+  geography = "county",
+  variables = my_variable,
+  state = my_state,
+  year = 2023,
+  survey = "acs5"
+)
+```
+
+Let's look at what came back.
+
+```{r}
+dim(county_data)
+head(county_data)
+```
+
+
+The data includes 62 rows. This matches the total number of counties in the state of New York.
+
+---
+
+## How big is the margin of error?
+
+A margin of error of 3,000 means something very different for an estimate of 20,000
+than for an estimate of 200,000. To compare across places, we need it as a
+percentage.
+
+```{r}
+county_data <- county_data %>%
+  mutate(moe_pct = moe/estimate * 100)
+```
+
+
+Now sort to see which counties are measured least reliably.
+
+```{r}
+county_data %>%
+  arrange(desc(moe_pct)) %>%
+  select(NAME, estimate, moe, moe_pct) %>%
+  head(10)
+```
+
+
+Hamilton County has the largest relative margin of error, at 34%. 
+
+---
+
+## Sorting counties into reliability categories
+
+```{r}
+county_data <- county_data %>%
+  mutate(reliability = case_when(
+    moe_pct < 5  ~ "High confidence",
+    moe_pct < 10 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+count(county_data, reliability)
+```
+
+
+Eight counties out of the total 62 fall into the category of "High Confidence" when it is defined at a threshold margin of error of 5%.  Nineteen counties fall into the category of "Moderate Confidence" when it is defined at a threshold of 10%. Thirty-five counties were classified as "Low Confidence." 
+
+---
+
+## Is the margin of error bigger in small places?
+
+To answer this we need population and our variable side by side, in the same row.
+That means a **wide** pull.
+
+```{r}
+county_wide <- get_acs(
+  geography = "county",
+  variables = c(myvar = my_variable,
+                pop   = "B01003_001"),
+  state = my_state,
+  year = 2023,
+  survey = "acs5",
+  output = "wide"
+)
+
+head(county_wide)
+```
+
+
+
+```{r}
+county_wide <- county_wide %>%
+  mutate(moe_pct = myvarM / myvarE * 100) %>%
+  mutate(reliability = case_when(
+    moe_pct < 5  ~ "High confidence",
+    moe_pct < 10 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+```
+
+Now compare the average population of counties in each reliability category.
+
+```{r}
+county_wide %>%
+  group_by(reliability) %>%
+  summarize(
+    n_counties = n(),
+    avg_population = mean(popE)
+  )
+```
+
+
+In order to compare the average population of counties in each reliability category, I have to group each observation by their reliability category and then take the average of each grouping's population estimate.
+
+
+Using the same thresholds as before, the average population of high-confidence counties is 1,465,609, while the average population of low-confidence counties is 66,228. This suggests that larger counties are counted more accurately than smaller counties. 
+
+
+---
+
+## What this means for policy
+
+The top 5 counties with the largest margins of error were Hamilton County, Wyoming County, Yates County, Washington County, and Greene County. Of these 5 counties, Washington had the largest population, totaling to almost 61,000 residents, while Hamilton County had the smallest population, totaling to about 5100. All 5 counties had margins of error above 16%, with Hamilton County having the largest margin of error at 34%. This suggests there is more accurate data collected about low-income women in larger counties (like those comprising New York City) than the smaller counties upstate. However, this is not surprising from a statistical standpoint. Unlike the Decennial Census, which aims to count everyone, the ACS makes estimates for a given geography based on sample data. Therefore, when the samples are smaller, each unit increase in the margin of error accounts for a much larger percentage than for a larger sample. 
+
+If a state agency were to allocate funding for economic development opportunities for women based on the percentage of low-income women as compiled by the ACS without accounting for margins of error, the agency might misjudge the extent of poverty as an issue for female residents in smaller counties versus larger counties. The 2023 ACS estimates that about 5% of Hamilton's population were women whose income was below the poverty level in the past 12 months. However, the margin of error suggests that as much as 6.5% of Hamilton's population may have been low-income women. Without taking into account the margin of error, however, the state agency might decide that Hamilton County doesn't meet the minimum threshold required to be eligible for the funding.
+

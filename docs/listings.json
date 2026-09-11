@@ -1,11 +1,14 @@
 [
   {
     "listing": "/assignments/index.html",
-    "items": []
+    "items": [
+      "/assignments/assignment2.html"
+    ]
   },
   {
     "listing": "/weekly-notes/index.html",
     "items": [
+      "/weekly-notes/week-03.html",
       "/weekly-notes/week-02.html",
       "/weekly-notes/week-01.html"
     ]

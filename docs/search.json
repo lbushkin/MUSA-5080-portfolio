@@ -102,14 +102,14 @@
     "href": "assignments/index.html",
     "title": "Assignments",
     "section": "",
-    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 10, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "weekly-notes/index.html",
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -166,5 +166,103 @@
     "title": "Week 1: Getting Set Up",
     "section": "One Thing I Learned Friday",
     "text": "One Thing I Learned Friday\nI learned that GitHub is not just for posting code and research projects."
+  },
+  {
+    "objectID": "assignments/assignment2.html",
+    "href": "assignments/assignment2.html",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2.html#setup",
+    "href": "assignments/assignment2.html#setup",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2.html#the-question",
+    "href": "assignments/assignment2.html#the-question",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "The question",
+    "text": "The question\nEvery number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement about how wrong it might be.\nMost people ignore it. In this assignment, you won’t.\nIn this analysis, I look at women whose income was below the poverty level in the past 12 months across counties in New York, and ask which communities we measure most and least reliably. Data collected on vulnerable populations can be used both to understand and provide necessary resources to those populations, so the reliability of the data is important for ensuring that those populations are accurately represented."
+  },
+  {
+    "objectID": "assignments/assignment2.html#choosing-what-to-measure",
+    "href": "assignments/assignment2.html#choosing-what-to-measure",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Choosing what to measure",
+    "text": "Choosing what to measure\n\nmy_state &lt;- \"NY\"        # two-letter abbreviation, in quotes\nmy_variable &lt;- \"B17001_017\"     # the variable code, in quotes"
+  },
+  {
+    "objectID": "assignments/assignment2.html#pulling-the-data",
+    "href": "assignments/assignment2.html#pulling-the-data",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Pulling the data",
+    "text": "Pulling the data\n\ncounty_data &lt;- get_acs(\n  geography = \"county\",\n  variables = my_variable,\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\"\n)\n\nLet’s look at what came back.\n\ndim(county_data)\n\n[1] 62  5\n\nhead(county_data)\n\n# A tibble: 6 × 5\n  GEOID NAME                         variable   estimate   moe\n  &lt;chr&gt; &lt;chr&gt;                        &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;\n1 36001 Albany County, New York      B17001_017    20723  1434\n2 36003 Allegany County, New York    B17001_017     3616   350\n3 36005 Bronx County, New York       B17001_017   211879  5751\n4 36007 Broome County, New York      B17001_017    19066  1290\n5 36009 Cattaraugus County, New York B17001_017     6786   535\n6 36011 Cayuga County, New York      B17001_017     5499   528\n\n\nThe data includes 62 rows. This matches the total number of counties in the state of New York."
+  },
+  {
+    "objectID": "assignments/assignment2.html#how-big-is-the-margin-of-error",
+    "href": "assignments/assignment2.html#how-big-is-the-margin-of-error",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "How big is the margin of error?",
+    "text": "How big is the margin of error?\nA margin of error of 3,000 means something very different for an estimate of 20,000 than for an estimate of 200,000. To compare across places, we need it as a percentage.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(moe_pct = moe/estimate * 100)\n\nNow sort to see which counties are measured least reliably.\n\ncounty_data %&gt;%\n  arrange(desc(moe_pct)) %&gt;%\n  select(NAME, estimate, moe, moe_pct) %&gt;%\n  head(10)\n\n# A tibble: 10 × 4\n   NAME                        estimate   moe moe_pct\n   &lt;chr&gt;                          &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;\n 1 Hamilton County, New York        250    85    34  \n 2 Wyoming County, New York        2364   439    18.6\n 3 Yates County, New York          1780   300    16.9\n 4 Washington County, New York     3436   566    16.5\n 5 Greene County, New York         2803   461    16.4\n 6 Orleans County, New York        2736   446    16.3\n 7 Schuyler County, New York       1371   219    16.0\n 8 Delaware County, New York       3123   467    15.0\n 9 Fulton County, New York         3764   555    14.7\n10 Cortland County, New York       3074   435    14.2\n\n\nHamilton County has the largest relative margin of error, at 34%."
+  },
+  {
+    "objectID": "assignments/assignment2.html#sorting-counties-into-reliability-categories",
+    "href": "assignments/assignment2.html#sorting-counties-into-reliability-categories",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Sorting counties into reliability categories",
+    "text": "Sorting counties into reliability categories\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 5  ~ \"High confidence\",\n    moe_pct &lt; 10 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\ncount(county_data, reliability)\n\n# A tibble: 3 × 2\n  reliability         n\n  &lt;chr&gt;           &lt;int&gt;\n1 High confidence     8\n2 Low confidence     35\n3 Moderate           19\n\n\nEight counties out of the total 62 fall into the category of “High Confidence” when it is defined at a threshold margin of error of 5%. Nineteen counties fall into the category of “Moderate Confidence” when it is defined at a threshold of 10%. Thirty-five counties were classified as “Low Confidence.”"
+  },
+  {
+    "objectID": "assignments/assignment2.html#is-the-margin-of-error-bigger-in-small-places",
+    "href": "assignments/assignment2.html#is-the-margin-of-error-bigger-in-small-places",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Is the margin of error bigger in small places?",
+    "text": "Is the margin of error bigger in small places?\nTo answer this we need population and our variable side by side, in the same row. That means a wide pull.\n\ncounty_wide &lt;- get_acs(\n  geography = \"county\",\n  variables = c(myvar = my_variable,\n                pop   = \"B01003_001\"),\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\",\n  output = \"wide\"\n)\n\nhead(county_wide)\n\n# A tibble: 6 × 6\n  GEOID NAME                         myvarE myvarM    popE  popM\n  &lt;chr&gt; &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;\n1 36001 Albany County, New York       20723   1434  315374    NA\n2 36003 Allegany County, New York      3616    350   47027    NA\n3 36005 Bronx County, New York       211879   5751 1419250    NA\n4 36007 Broome County, New York       19066   1290  197738    NA\n5 36009 Cattaraugus County, New York   6786    535   76479    NA\n6 36011 Cayuga County, New York        5499    528   75464    NA\n\n\n\ncounty_wide &lt;- county_wide %&gt;%\n  mutate(moe_pct = myvarM / myvarE * 100) %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 5  ~ \"High confidence\",\n    moe_pct &lt; 10 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\nNow compare the average population of counties in each reliability category.\n\ncounty_wide %&gt;%\n  group_by(reliability) %&gt;%\n  summarize(\n    n_counties = n(),\n    avg_population = mean(popE)\n  )\n\n# A tibble: 3 × 3\n  reliability     n_counties avg_population\n  &lt;chr&gt;                &lt;int&gt;          &lt;dbl&gt;\n1 High confidence          8       1465609.\n2 Low confidence          35         66228.\n3 Moderate                19        306814.\n\n\nIn order to compare the average population of counties in each reliability category, I have to group each observation by their reliability category and then take the average of each grouping’s population estimate.\nUsing the same thresholds as before, the average population of high-confidence counties is 1,465,609, while the average population of low-confidence counties is 66,228. This suggests that larger counties are counted more accurately than smaller counties."
+  },
+  {
+    "objectID": "assignments/assignment2.html#what-this-means-for-policy",
+    "href": "assignments/assignment2.html#what-this-means-for-policy",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "What this means for policy",
+    "text": "What this means for policy\nThe top 5 counties with the largest margins of error were Hamilton County, Wyoming County, Yates County, Washington County, and Greene County. Of these 5 counties, Washington had the largest population, totaling to almost 61,000 residents, while Hamilton County had the smallest population, totaling to about 5100. All 5 counties had margins of error above 16%, with Hamilton County having the largest margin of error at 34%. This suggests there is more accurate data collected about low-income women in larger counties (like those comprising New York City) than the smaller counties upstate. However, this is not surprising from a statistical standpoint. Unlike the Decennial Census, which aims to count everyone, the ACS makes estimates for a given geography based on sample data. Therefore, when the samples are smaller, each unit increase in the margin of error accounts for a much larger percentage than for a larger sample.\nIf a state agency were to allocate funding for economic development opportunities for women based on the percentage of low-income women as compiled by the ACS without accounting for margins of error, the agency might misjudge the extent of poverty as an issue for female residents in smaller counties versus larger counties. The 2023 ACS estimates that about 5% of Hamilton’s population were women whose income was below the poverty level in the past 12 months. However, the margin of error suggests that as much as 6.5% of Hamilton’s population may have been low-income women. Without taking into account the margin of error, however, the state agency might decide that Hamilton County doesn’t meet the minimum threshold required to be eligible for the funding."
+  },
+  {
+    "objectID": "assignments/assignment2.html#before-you-submit",
+    "href": "assignments/assignment2.html#before-you-submit",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Before you submit",
+    "text": "Before you submit\n\n\n\n\n\n\nNoteDelete this box — checklist\n\n\n\n\nThe file is at assignments/assignment2.qmd\nSession → Restart R, then render the whole project. It works.\nCommitted and pushed\nYou opened your live site and looked at the published page"
+  },
+  {
+    "objectID": "weekly-notes/week-03.html",
+    "href": "weekly-notes/week-03.html",
+    "title": "Week 3:",
+    "section": "",
+    "text": "Here."
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#what-we-did",
+    "href": "weekly-notes/week-03.html#what-we-did",
+    "title": "Week 3:",
+    "section": "",
+    "text": "Here."
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#key-concepts",
+    "href": "weekly-notes/week-03.html#key-concepts",
+    "title": "Week 3:",
+    "section": "Key Concepts",
+    "text": "Key Concepts\nHere."
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#questions-i-still-have",
+    "href": "weekly-notes/week-03.html#questions-i-still-have",
+    "title": "Week 3:",
+    "section": "Questions I Still Have",
+    "text": "Questions I Still Have\n\nW"
   }
 ]
