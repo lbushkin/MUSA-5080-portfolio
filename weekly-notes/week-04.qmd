@@ -1,20 +1,44 @@
 ---
-title: "Week 4: "
-description: ""
-date: 2026-09-11
+title: "Week 4: Working with Spatial Data in R"
+description: "Learning basic functions in sf package"
+date: 2026-09-18
 ---
 
 ## What We Did
 
-Here.
+Went over projections and basic functions for working with and mapping spatial data in R. 
 
 ## Key Concepts
 
-Here.
+Overview of Geography & Coordinate Reference Systems
 
+- Geographic: latitude and longitude, measured in degrees
+  - Geographers draw different ellipsoids to fit different areas of the Earth better
+  - Ex: North American Datum 1927 (NAD27) based on Clarke's ellipsoid from 1866
+  - NAD83 based on satellite imagery; more accurate than NAD27 and most commonly used in U.S. today
+  - WGS84 is the standard for GPS because it's global
+- Projected: flattens 3D to 2D, measured in ft and meters
+  - Projections distort shape, area, distance, and/or direction
+  - Every projection has a "line of tangency" where there is no distortion
+  - Cylindrical: northern and southern extremities of Earth most distorted - ex: Mercator
+  - Conic: best for northern hemisphere (ex: Canada, U.S., Russia, China)
+  - Planar: best for singular landmass (ex: Australia)
+- Projection for Philadelphia: PA southern state plane (2272)
+  
 
+Spatial features (Sf) and relevant commands in R:
 
-## Questions I Still Have
-
-- W
+- st_crs(your data) to view crs of your data
+- st_set_crs() to add correct label (if missing)
+  - if missing, may need to guess and check to find right crs
+- st_transform() to change the projection of your data
+- st_buffer() to create buffer around object
+  - units will match that of the object/layer 
+- st_intersects() is /not/ the same as st_touches()
+- st_filter() to select geographies that are completely within set buffer distance
+- st_union() to unify everything selected
+- st_intersection() to get common area
+- st_join() behaves like a left join for spatial datasets
+- st_distance() to returns a matrix of distances between all objects within 2 datasets 
+- st_disjoint if geometries have no point in common (i.e. are completely separate)
 
