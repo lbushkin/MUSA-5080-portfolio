@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Running notes from MUSA 5080.">
+<meta name="dcterms.date" content="2026-09-18">
+<meta name="description" content="Learning basic functions in sf package">
 
-<title>Weekly Notes – Luca Bushkin - MUSA 5080 Portfolio</title>
+<title>Week 4: Working with Spatial Data in R – Luca Bushkin - MUSA 5080 Portfolio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -72,8 +73,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -111,65 +110,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-date','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -199,7 +140,7 @@ window.Quarto = {
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../weekly-notes/index.html" aria-current="page"> 
+    <a class="nav-link" href="../weekly-notes/index.html"> 
 <span class="menu-text">Weekly Notes</span></a>
   </li>  
   <li class="nav-item">
@@ -224,20 +165,27 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-we-did" id="toc-what-we-did" class="nav-link active" data-scroll-target="#what-we-did">What We Did</a></li>
+  <li><a href="#key-concepts" id="toc-key-concepts" class="nav-link" data-scroll-target="#key-concepts">Key Concepts</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Weekly Notes</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Week 4: Working with Spatial Data in R</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 <div>
   <div class="description">
-    Running notes from MUSA 5080.
+    Learning basic functions in sf package
   </div>
 </div>
 
@@ -245,6 +193,12 @@ window.Quarto = {
 <div class="quarto-title-meta">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 18, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -254,120 +208,58 @@ window.Quarto = {
 </header>
 
 
-<p>Notes from each week of MUSA 5080. New entries appear here automatically — add a <code>.qmd</code> file to this folder and render.</p>
-
+<section id="what-we-did" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-did">What We Did</h2>
+<p>Went over projections and basic functions for working with and mapping spatial data in R.</p>
+</section>
+<section id="key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="key-concepts">Key Concepts</h2>
+<p>Overview of Geography &amp; Coordinate Reference Systems</p>
+<ul>
+<li>Geographic: latitude and longitude, measured in degrees
+<ul>
+<li>Geographers draw different ellipsoids to fit different areas of the Earth better</li>
+<li>Ex: North American Datum 1927 (NAD27) based on Clarke’s ellipsoid from 1866</li>
+<li>NAD83 based on satellite imagery; more accurate than NAD27 and most commonly used in U.S. today</li>
+<li>WGS84 is the standard for GPS because it’s global</li>
+</ul></li>
+<li>Projected: flattens 3D to 2D, measured in ft and meters
+<ul>
+<li>Projections distort shape, area, distance, and/or direction</li>
+<li>Every projection has a “line of tangency” where there is no distortion</li>
+<li>Cylindrical: northern and southern extremities of Earth most distorted - ex: Mercator</li>
+<li>Conic: best for northern hemisphere (ex: Canada, U.S., Russia, China)</li>
+<li>Planar: best for singular landmass (ex: Australia)</li>
+</ul></li>
+<li>Projection for Philadelphia: PA southern state plane (2272)</li>
+</ul>
+<p>Spatial features (Sf) and relevant commands in R:</p>
+<ul>
+<li>st_crs(your data) to view crs of your data</li>
+<li>st_set_crs() to add correct label (if missing)
+<ul>
+<li>if missing, may need to guess and check to find right crs</li>
+</ul></li>
+<li>st_transform() to change the projection of your data</li>
+<li>st_buffer() to create buffer around object
+<ul>
+<li>units will match that of the object/layer</li>
+</ul></li>
+<li>st_intersects() is /not/ the same as st_touches()</li>
+<li>st_filter() to select geographies that are completely within set buffer distance</li>
+<li>st_union() to unify everything selected</li>
+<li>st_intersection() to get common area</li>
+<li>st_join() behaves like a left join for spatial datasets</li>
+<li>st_distance() to returns a matrix of distances between all objects within 2 datasets</li>
+<li>st_disjoint if geometries have no point in common (i.e.&nbsp;are completely separate)</li>
+</ul>
 
 
 <!-- -->
 
+</section>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-date-sort="1789704000000" data-listing-file-modified-sort="1789745265971" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="289">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-04.html" class="no-external">Week 4: Working with Spatial Data in R</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-04.html" class="no-external">
-<p>Learning basic functions in sf package</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-04.html" class="no-external">
-<div class="listing-date">
-Sep 18, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1789099200000" data-listing-file-modified-sort="1789140542672" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="385">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-03.html" class="no-external">Week 3: GGPLOT &amp; Addressing Margins of Error</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-03.html" class="no-external">
-<p>Using ggplot for data visualization and addressing margins of error in data</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-03.html" class="no-external">
-<div class="listing-date">
-Sep 11, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1789099200000" data-listing-file-modified-sort="1789131895630" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="8">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-05.html" class="no-external">Week 4:</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-05.html" class="no-external">
-
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-05.html" class="no-external">
-<div class="listing-date">
-Sep 11, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-date-sort="1789099200000" data-listing-file-modified-sort="1789131895630" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="8">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-06.html" class="no-external">Week 4:</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-06.html" class="no-external">
-
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-06.html" class="no-external">
-<div class="listing-date">
-Sep 11, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-listing-date-sort="1788580800000" data-listing-file-modified-sort="1788914661425" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="122">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-02.html" class="no-external">Week 2: Dplyr &amp; Census Data</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-02.html" class="no-external">
-<p>Dplyr review and practice with census data exercise.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-02.html" class="no-external">
-<div class="listing-date">
-Sep 5, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-listing-date-sort="1787889600000" data-listing-file-modified-sort="1788116238197" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="192">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-01.html" class="no-external">Week 1: Getting Set Up</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-01.html" class="no-external">
-<p>First impressions, and getting the workflow running.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-01.html" class="no-external">
-<div class="listing-date">
-Aug 28, 2026
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -820,19 +712,48 @@ Aug 28, 2026
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Weekly Notes"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Running notes from MUSA 5080."</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">listing:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  contents: "*.qmd"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  sort: "date desc"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  type: default</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">  fields: [title, date, description]</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">  sort-ui: false</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">  filter-ui: false</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Week 4: Working with Spatial Data in R"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Learning basic functions in sf package"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2026-09-18</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## What We Did</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>Went over projections and basic functions for working with and mapping spatial data in R. </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">## Key Concepts</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Notes from each week of MUSA 5080. New entries appear here automatically —</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>add a <span class="in">`.qmd`</span> file to this folder and render.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Overview of Geography &amp; Coordinate Reference Systems</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Geographic: latitude and longitude, measured in degrees</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Geographers draw different ellipsoids to fit different areas of the Earth better</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Ex: North American Datum 1927 (NAD27) based on Clarke's ellipsoid from 1866</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>NAD83 based on satellite imagery; more accurate than NAD27 and most commonly used in U.S. today</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>WGS84 is the standard for GPS because it's global</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Projected: flattens 3D to 2D, measured in ft and meters</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Projections distort shape, area, distance, and/or direction</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Every projection has a "line of tangency" where there is no distortion</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Cylindrical: northern and southern extremities of Earth most distorted - ex: Mercator</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Conic: best for northern hemisphere (ex: Canada, U.S., Russia, China)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Planar: best for singular landmass (ex: Australia)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Projection for Philadelphia: PA southern state plane (2272)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>Spatial features (Sf) and relevant commands in R:</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_crs(your data) to view crs of your data</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_set_crs() to add correct label (if missing)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>if missing, may need to guess and check to find right crs</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_transform() to change the projection of your data</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_buffer() to create buffer around object</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>units will match that of the object/layer </span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_intersects() is /not/ the same as st_touches()</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_filter() to select geographies that are completely within set buffer distance</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_union() to unify everything selected</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_intersection() to get common area</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_join() behaves like a left join for spatial datasets</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_distance() to returns a matrix of distances between all objects within 2 datasets </span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>st_disjoint if geometries have no point in common (i.e. are completely separate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

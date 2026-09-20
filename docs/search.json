@@ -109,7 +109,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 4: Working with Spatial Data in R\n\n\nLearning basic functions in sf package\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 4:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -264,5 +264,26 @@
     "title": "Week 3: GGPLOT & More Margins of Error",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have\n\nW"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html",
+    "href": "weekly-notes/week-04.html",
+    "title": "Week 4: Working with Spatial Data in R",
+    "section": "",
+    "text": "Went over projections and basic functions for working with and mapping spatial data in R."
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#what-we-did",
+    "href": "weekly-notes/week-04.html#what-we-did",
+    "title": "Week 4: Working with Spatial Data in R",
+    "section": "",
+    "text": "Went over projections and basic functions for working with and mapping spatial data in R."
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#key-concepts",
+    "href": "weekly-notes/week-04.html#key-concepts",
+    "title": "Week 4: Working with Spatial Data in R",
+    "section": "Key Concepts",
+    "text": "Key Concepts\nOverview of Geography & Coordinate Reference Systems\n\nGeographic: latitude and longitude, measured in degrees\n\nGeographers draw different ellipsoids to fit different areas of the Earth better\nEx: North American Datum 1927 (NAD27) based on Clarke’s ellipsoid from 1866\nNAD83 based on satellite imagery; more accurate than NAD27 and most commonly used in U.S. today\nWGS84 is the standard for GPS because it’s global\n\nProjected: flattens 3D to 2D, measured in ft and meters\n\nProjections distort shape, area, distance, and/or direction\nEvery projection has a “line of tangency” where there is no distortion\nCylindrical: northern and southern extremities of Earth most distorted - ex: Mercator\nConic: best for northern hemisphere (ex: Canada, U.S., Russia, China)\nPlanar: best for singular landmass (ex: Australia)\n\nProjection for Philadelphia: PA southern state plane (2272)\n\nSpatial features (Sf) and relevant commands in R:\n\nst_crs(your data) to view crs of your data\nst_set_crs() to add correct label (if missing)\n\nif missing, may need to guess and check to find right crs\n\nst_transform() to change the projection of your data\nst_buffer() to create buffer around object\n\nunits will match that of the object/layer\n\nst_intersects() is /not/ the same as st_touches()\nst_filter() to select geographies that are completely within set buffer distance\nst_union() to unify everything selected\nst_intersection() to get common area\nst_join() behaves like a left join for spatial datasets\nst_distance() to returns a matrix of distances between all objects within 2 datasets\nst_disjoint if geometries have no point in common (i.e. are completely separate)"
   }
 ]
