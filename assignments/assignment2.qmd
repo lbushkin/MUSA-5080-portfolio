@@ -28,8 +28,6 @@ Every number the American Community Survey publishes is an estimate drawn from a
 sample, not a count. That means every number comes with a margin of error — a
 statement about how wrong it might be.
 
-Most people ignore it. In this assignment, you won't.
-
 In this analysis, I look at women whose income was below the poverty level in the past 12 months across counties in New York, and ask which communities we measure most and least reliably. Data collected on vulnerable populations can be used both to understand and provide necessary resources to those populations, so the reliability of the data is important for ensuring that those populations are accurately represented.
 
 ---
