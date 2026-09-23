@@ -354,7 +354,6 @@ foreign_tested %>%
 
 
 ```{r}
-#| include: false 
 
 MOE_sum_pop <- moe_sum(Mayfair_change$foreignM_17, Mayfair_change$foreignE_17)
 
@@ -378,15 +377,15 @@ Using the function moe_sum from tidycensus, we can get the margin of error for t
 
 Sorting the article’s claims into three buckets produces the following results:
 
-Supported: There was a significant increase in the immigrant population in the neighborhood of Mayfair between 2017 and 2022.
+Supported: There was a significant increase in the immigrant population in the neighborhood of Mayfair between 2017 and 2022. Taking into account the margins of error for each estimate in this analysis reveals that the difference between the two years is unlikely to be zero, given the z-score and the range of the confidence interval of the difference. 
 
-Not supported: Mayfair's population did not significantly increase between 2017 and 2022. 
+Not supported: Mayfair's population did not significantly increase between 2017 and 2022. Analyzing the difference in the population estimates between the two years did not produce significant z-scores for any of the tracts, signaling that the changes in population estimates are unlikely to be non-zero.
 
-Cannot be determined: It is unclear whether Philadelphia's population significantly increased between 2023 and 2024.
+Cannot be determined: It is unclear whether Philadelphia's population significantly increased between 2023 and 2024. The Census Bureau does not list margins of error for those county-wide population estimates in the 5-year ACS data, therefore I cannot conduct the same analysis for this claim as I did for Mayfair. 
 
 
 ## Part 4 — Rewriting the Claim
 
-The neighborhood of Mayfair, in the 19149 ZIP code of Northeast Philadelphia, had about 26,601 residents in 2022. We can be moderately confident that about 34% of those residents were foreign-born. The immigrant population there grew by at least 1,431 people from 2013–2017 to 2018–2022, even though the neighborhood’s population did not significantly increase.
+The neighborhood of Mayfair, in the 19149 ZIP code of Northeast Philadelphia, had about 26,601 residents in 2022. We can be moderately confident that about 34% of those residents were foreign-born. The immigrant population there grew by at least 1,431 people (about 28%) from 2013–2017 to 2018–2022, even though the neighborhood’s population on the whole did not significantly increase.
 
 
