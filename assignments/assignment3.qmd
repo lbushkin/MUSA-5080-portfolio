@@ -124,7 +124,7 @@ Census_table <- Mayfair_change |>
   ) |>
   tab_header(
     title    = "Population Estimates for Mayfair Neighborhood",
-    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+    subtitle = "Census Tracts, ACS 2017 and 2022 5-year estimates"
   )
 
 Census_table
@@ -226,7 +226,7 @@ reliability_table_pop |>
   cols_align(align = "center", columns = c(dot17, dot22)) |>
   tab_header(
     title    = "Population Estimates for Mayfair Neighborhood",
-    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+    subtitle = "Census Tracts, ACS 2017 and 2022 5-year estimates"
   ) |>
   tab_source_note(
     "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% reliable, 12–40% somewhat reliable, > 40% unreliable."
@@ -282,7 +282,7 @@ reliability_table_f |>
   cols_align(align = "center", columns = c(dot17, dot22)) |>
   tab_header(
     title    = "Foreign-Born Estimates for Mayfair Neighborhood",
-    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+    subtitle = "Census Tracts, ACS 2017 and 2022 5-year estimates"
   ) |>
   tab_source_note(
     "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% reliable, 12–40% somewhat reliable, > 40% unreliable."
