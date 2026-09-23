@@ -354,7 +354,6 @@ foreign_tested %>%
 
 
 ```{r}
-
 MOE_sum_pop <- moe_sum(Mayfair_change$foreignM_17, Mayfair_change$foreignE_17)
 
 MOE_sum_foreign <- moe_sum(Mayfair_change$foreignM_22, Mayfair_change$foreignE_22)
@@ -362,8 +361,6 @@ MOE_sum_foreign <- moe_sum(Mayfair_change$foreignM_22, Mayfair_change$foreignE_2
 SE_diff <- sqrt(((933.0777^2)/1.645)+((1671.258^2)/1.645))
 
 z_score <- (9028-5142)/SE_diff
-
-z_score
 
 Population_difference <- 9028-5142
 
@@ -381,7 +378,7 @@ Supported: There was a significant increase in the immigrant population in the n
 
 Not supported: Mayfair's population did not significantly increase between 2017 and 2022. Analyzing the difference in the population estimates between the two years did not produce significant z-scores for any of the tracts, signaling that the changes in population estimates are unlikely to be non-zero.
 
-Cannot be determined: It is unclear whether Philadelphia's population significantly increased between 2023 and 2024. The Census Bureau does not list margins of error for those county-wide population estimates in the 5-year ACS data, therefore I cannot conduct the same analysis for this claim as I did for Mayfair. 
+Cannot be determined: It is unclear whether Philadelphia's population significantly increased between 2023 and 2024. The Census Bureau does not list margins of error for those county-wide population estimates in the 5-year ACS data, therefore I cannot conduct the same analysis for this claim as I did for Mayfair. This also means that I can't verify how Mayfair's demographic changes compare to Philadelphia's.
 
 
 ## Part 4 — Rewriting the Claim
