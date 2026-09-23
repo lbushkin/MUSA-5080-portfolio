@@ -1,26 +1,392 @@
 ---
-title: "assignment3"
-format: html
-editor: visual
+title: "Assignment 3: Verify the Claim"
+subtitle: "Testing a published claim about neighborhood change against the data behind it"
+author: "Luca Bushkin"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+execute:
+  warning: false
+  message: false
 ---
 
-## Quarto
+## Introduction
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+In this assignment, I chose to look at an article from Northeast Times, titled "Immigration Leads Philadelphia’s Population Growth After Years of Decline." This article claimed that Philadelphia’s population increased between 2023 and 2024, and that this growth was primarily driven by an increase in immigrants/foreign-born residents. More specifically, the article mentions the neighborhood of Mayfair as a representative example of this demographic change, citing an 11% increase in the total population and a 62% increase in the immigrant population between 2017 and 2022. 
 
-## Running Code
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Part 1 — Reconstructing the Data
+
+In order to examine the article's claims, I will look at tract-level data for the neighborhood of Mayfair, using the 5-year 2017 and 2022 ACS estimates for total population and foreign-born residents (variables B05002_001 and B05002_013, respectively). I will use tracts 332, 315.02, 315.01, 316, and 317 to estimate the neighborhood boundaries of Mayfair, as these census tract boundaries align with the neighborhood boundaries as depicted on Google Maps. Fortunately, these time periods (2013-2017 and 2018-2022) do not overlap, which will make the comparison more valid.
+
+I will not look at the population change in Philadelphia between 2023 and 2024, as the Census Bureau does not list margins of error for those estimates and the time periods for these ACS estimates overlap, making any comparison more difficult to validate.
 
 ```{r}
-1 + 1
+#| include: false
+library(tidyverse)
+library(tidycensus)
+library(ggplot2)
+library(sf)
+library(gt)
 ```
 
-You can add options to executable code like this
+
+```{r}
+
+Philly17 <- get_acs(geography = "tract", 
+                    variables = c(pop = "B05002_001", foreign = "B05002_013"), 
+                    year = 2017, output = "wide", 
+                    geometry = TRUE, state = "PA", 
+                    county = "Philadelphia", survey = "acs5", 
+                    progress = FALSE)
+
+Mayfair_trcts <- c("Census Tract 316, Philadelphia County, Pennsylvania", "Census Tract 317, Philadelphia County, Pennsylvania", "Census Tract 315.01, Philadelphia County, Pennsylvania", "Census Tract 315.02, Philadelphia County, Pennsylvania", "Census Tract 332, Philadelphia County, Pennsylvania")
+
+Mayfair17 <- Philly17 |>
+  subset(NAME %in% Mayfair_trcts)
+
+Philly22 <- get_acs(geography = "tract", 
+                    variables = c(pop = "B05002_001", foreign = "B05002_013"), 
+                    year = 2022, output = "wide", 
+                    geometry = TRUE, state = "PA", 
+                    county = "Philadelphia", survey = "acs5", 
+                    progress = FALSE)
+
+Mayfair_trcts2 <- c("Census Tract 315.01; Philadelphia County; Pennsylvania", "Census Tract 315.02; Philadelphia County; Pennsylvania", "Census Tract 316; Philadelphia County; Pennsylvania", "Census Tract 317; Philadelphia County; Pennsylvania", "Census Tract 332; Philadelphia County; Pennsylvania")
+
+Mayfair22 <- Philly22 |>
+  subset(NAME %in% Mayfair_trcts2)
+
+total2017 <- sum(Mayfair17$popE)
+
+total2022 <- sum(Mayfair22$popE)
+
+ftotal_2017 <- sum(Mayfair17$foreignE)
+
+ftotal_2022 <- sum(Mayfair22$foreignE)
+
+pct_change_pop <- (26601-26522)/26522 * 100
+
+pct_change_foreign <- (9028-5142)/5142 * 100
+```
+
+
+```{r}
+#| echo: false    #The `echo: false` option disables the printing of code (only output is displayed).
+Mayfair17 <- Mayfair17 |>
+  rename(popE_17 = popE) |>
+  rename(popM_17 = popM) |>
+  rename(foreignE_17 = foreignE) |>
+  rename(foreignM_17 = foreignM)
+
+Mayfair17 <- Mayfair17 |>
+  mutate(NAME = str_remove_all(NAME, ", Philadelphia County, Pennsylvania"))
+
+Mayfair17 <- Mayfair17 |>
+  st_drop_geometry()
+
+Mayfair22 <- Mayfair22 |>
+  rename(popE_22 = popE) |>
+  rename(popM_22 = popM) |>
+  rename(foreignE_22 = foreignE) |>
+  rename(foreignM_22 = foreignM)
+
+Mayfair22 <- Mayfair22 |>
+  mutate(NAME = str_remove_all(NAME, "; Philadelphia County; Pennsylvania"))
+
+Mayfair22 <- Mayfair22 |>
+  st_drop_geometry()
+
+Mayfair_change <- left_join(Mayfair17, Mayfair22, by = "GEOID")
+
+Mayfair_change <- Mayfair_change |>
+  rename(NAME = NAME.x)
+
+Mayfair_change$NAME.y <- NULL  #to remove the extra name column
+
+Census_table <- Mayfair_change |>
+  mutate(NAME = str_remove(NAME, "Census Tract")) |>
+  gt() |>
+  cols_label(
+    NAME     = "Tract",
+    popE_17  = "2017 Estimate",
+    popM_17  = "2017 MOE",
+    foreignE_17 = "2017 Foreign-born" ,
+    foreignM_17 = "2017 Foreign-born MOE" ,
+    popE_22  = "2022 Estimate",
+    popM_22  = "2022 MOE",
+    foreignE_22 = "2022 Foreign-born" ,
+    foreignM_22 = "2022 Foreign-born MOE" ,
+  ) |>
+  tab_header(
+    title    = "Population Estimates for Mayfair Neighborhood",
+    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+  )
+
+Census_table
+```
+
+
+Pulling this ACS data shows that the total population in Mayfair in 2017 was about 26,522, while the population in 2022 was about 26,601. The foreign-born population in 2017 was about 5,142, and about 9,028 in 2022. Without accounting for the margins of error, the increase in the total population between 2017 and 2022 was about 30%, while the foreign-born population increase is about 76%. These initial discrepancies between the raw numbers are due to differences in how the neighborhood was approximated, as the article claims the neighborhood has a population of about 44,000 residents - almost double my estimates. Nevertheless, we can still examine whether the claim of population increase and specifically immigrant increase is valid, regardless of the specific percentages, by taking into account the margins of error.  
+
+
+## Part 2 — Testing the Claim
+
+```{r}
+#| echo: false  
+Mayfair_change <- Mayfair_change |>
+  mutate(
+    totalMpct_17 = (`popM_17`/`popE_17`)*100,
+    totalMpct_22 = (`popM_22`/`popE_22`)*100,
+    fMpct_17 = (`foreignM_17`/`foreignE_17`)*100,
+    fMpct_22 = (`foreignM_22`/`foreignE_22`)*100
+  )
+
+Mayfair_change <- Mayfair_change %>%
+  mutate(pop17_reliability = case_when(
+    totalMpct_17 < 12  ~ "High confidence",
+    totalMpct_17 < 40 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+Mayfair_change <- Mayfair_change %>%
+  mutate(pop22_reliability = case_when(
+    totalMpct_22 < 12  ~ "High confidence",
+    totalMpct_22 < 40 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+Mayfair_change <- Mayfair_change %>%
+  mutate(f17_reliability = case_when(
+    fMpct_17 < 12  ~ "High confidence",
+    fMpct_17 < 40 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+Mayfair_change <- Mayfair_change %>%
+  mutate(f22_reliability = case_when(
+    fMpct_22 < 12  ~ "High confidence",
+    fMpct_22 < 40 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+```
+
+Based on coefficient of reliability calculations and reliability thresholds of 12% for high confidence and 40% for moderate confidence (based on Jurjevich et al. (2018)), the total population estimates for 2017 are more reliable for each tract than the estimates for 2022. By contrast, neither the 2017 nor the 2022 estimates for foreign-born residents were highly reliable; most tracts were moderately confident for both periods. Tract 316 was unreliable for 2017, while tract 317 was unreliable for 2022. These issues of reliability are summarized in the tables below.
+
+```{r}
+#| echo: false    #The `echo: false` option disables the printing of code (only output is displayed).
+
+reliability_table_pop <- Mayfair_change |>
+  mutate(NAME = str_remove_all(NAME, "Census Tract")) |>
+  mutate(
+    dot17 = case_when(
+      pop17_reliability == "High confidence"  ~ "🟢",   
+      pop17_reliability == "Moderate" ~ "🟡",
+      TRUE     ~ "🔴"
+    ),
+    flag17 = case_when(
+      pop17_reliability == "High confidence"  ~ "Reliable",
+      pop17_reliability == "Moderate" ~ "Somewhat reliable",
+      TRUE     ~ "Unreliable"
+    )) |>
+  mutate(
+    dot22 = case_when(
+      pop22_reliability == "High confidence"  ~ "🟢",   
+      pop22_reliability == "Moderate" ~ "🟡",
+      TRUE     ~ "🔴"
+    ),
+    flag22 = case_when(
+      pop22_reliability == "High confidence"  ~ "Reliable",
+      pop22_reliability == "Moderate" ~ "Somewhat reliable",
+      TRUE     ~ "Unreliable"
+    )) |>
+  arrange(desc(totalMpct_17)) |>
+  select(NAME, popE_17, popM_17, totalMpct_17, flag17, dot17, popE_22, popM_22, totalMpct_22, flag22, dot22)
+
+reliability_table_pop |>
+  gt() |>
+  fmt_number(columns = c(totalMpct_17, totalMpct_22), decimals = 1) |>
+  cols_label(
+    NAME     = "Tract",
+    popE_17  = "2017 Estimate",
+    popM_17  = "2017 MOE",
+    totalMpct_17 = "2017 CV (%)",
+    dot17    = "Marker 2017",
+    flag17   = "2017 Reliability",
+    popE_22  = "2022 Estimate",
+    popM_22  = "2022 MOE",
+    totalMpct_22 = "2022 CV (%)",
+    dot22    = "Marker 2022",
+    flag22     = "2022 Reliability"
+  ) |>
+  cols_align(align = "center", columns = c(dot17, dot22)) |>
+  tab_header(
+    title    = "Population Estimates for Mayfair Neighborhood",
+    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+  ) |>
+  tab_source_note(
+    "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% reliable, 12–40% somewhat reliable, > 40% unreliable."
+  )
+```
 
 ```{r}
 #| echo: false
-2 * 2
+
+reliability_table_f <- Mayfair_change |>
+  mutate(NAME = str_remove_all(NAME, "Census Tract")) |>
+  mutate(
+    dot17 = case_when(
+      f17_reliability == "High confidence"  ~ "🟢",   
+      f17_reliability == "Moderate" ~ "🟡",
+      TRUE     ~ "🔴"
+    ),
+    flag17 = case_when(
+      f17_reliability == "High confidence"  ~ "Reliable",
+      f17_reliability == "Moderate" ~ "Somewhat reliable",
+      TRUE     ~ "Unreliable"
+    )) |>
+  mutate(
+    dot22 = case_when(
+      f22_reliability == "High confidence"  ~ "🟢",   
+      f22_reliability == "Moderate" ~ "🟡",
+      TRUE     ~ "🔴"
+    ),
+    flag22 = case_when(
+      f22_reliability == "High confidence"  ~ "Reliable",
+      f22_reliability == "Moderate" ~ "Somewhat reliable",
+      TRUE     ~ "Unreliable"
+    )) |>
+  arrange(desc(totalMpct_17)) |>
+  select(NAME, foreignE_17, foreignM_17, fMpct_17, flag17, dot17, foreignE_22, foreignM_22, fMpct_22, flag22, dot22)
+
+reliability_table_f |>
+  gt() |>
+  fmt_number(columns = c(fMpct_17, fMpct_22), decimals = 1) |>
+  cols_label(
+    NAME     = "Tract",
+    foreignE_17  = "2017 Estimate",
+    foreignM_17  = "2017 MOE",
+    fMpct_17 = "2017 CV (%)",
+    dot17    = "Marker 2017",
+    flag17   = "2017 Reliability",
+    foreignE_22  = "2022 Estimate",
+    foreignM_22  = "2022 MOE",
+    fMpct_22 = "2022 CV (%)",
+    dot22    = "Marker 2022",
+    flag22     = "2022 Reliability"
+  ) |>
+  cols_align(align = "center", columns = c(dot17, dot22)) |>
+  tab_header(
+    title    = "Foreign-Born Estimates for Mayfair Neighborhood",
+    subtitle = "Census Tracts, ACS 2023 5-year estimates"
+  ) |>
+  tab_source_note(
+    "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% reliable, 12–40% somewhat reliable, > 40% unreliable."
+  )
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+
+pop_tested <- Mayfair_change |>
+  mutate(
+    pop_change   = `popE_22` - `popE_17`,
+    se_1     = `popM_17` / 1.645,
+    se_2     = `popM_22` / 1.645,
+    se_diff  = sqrt(se_1^2 + se_2^2),
+    moe_diff = se_diff * 1.645,
+    z        = pop_change / se_diff,
+    significant = abs(z) > 1.645   
+  )
+
+foreign_tested <- Mayfair_change |>
+  mutate(
+    f_change   = `foreignE_22` - `foreignE_17`,
+    se_1     = `foreignM_17` / 1.645,
+    se_2     = `foreignM_22` / 1.645,
+    se_diff  = sqrt(se_1^2 + se_2^2),
+    moe_diff = se_diff * 1.645,
+    z        = f_change / se_diff,
+    significant = abs(z) > 1.645   
+  )
+```
+
+The analysis shows that none of the tracts had a significant change in total population between 2017 and 2022. However, three of the five tracts (tracts 315.01, 317, 332) did see significant changes in the immigrant/foreign-born population during that same time frame. These changes are visualized in the graphs in the graphs below.
+
+```{r}
+#| echo: false
+
+pop_tested %>%
+  mutate(NAME = str_remove(NAME, "Census Tract")) |>
+  ggplot(aes(x = reorder(NAME, pop_change), y = pop_change)) +
+  geom_col(aes(fill = significant)) +
+  geom_errorbar(aes(ymin = pop_change - moe_diff,
+                    ymax = pop_change + moe_diff), width = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +  #to emphasize split between positive & negative change
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Change in population by tract",
+       subtitle = "2013–2017 vs 2018–2022, ACS 5-year estimates",
+       x = NULL, y = "Change in population")
+```
+
+
+```{r}
+#| echo: false
+
+foreign_tested %>%
+  mutate(NAME = str_remove(NAME, "Census Tract")) %>%
+  ggplot(aes(x = reorder(NAME, f_change), y = f_change)) +
+  geom_col(aes(fill = significant)) +
+  geom_errorbar(aes(ymin = f_change - moe_diff,
+                    ymax = f_change + moe_diff), width = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +  #to emphasize split between positive & negative change
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Change in foreign-born population by tract",
+       subtitle = "2013–2017 vs 2018–2022, ACS 5-year estimates",
+       x = NULL, y = "Change in population")
+```
+
+
+```{r}
+#| include: false 
+
+MOE_sum_pop <- moe_sum(Mayfair_change$foreignM_17, Mayfair_change$foreignE_17)
+
+MOE_sum_foreign <- moe_sum(Mayfair_change$foreignM_22, Mayfair_change$foreignE_22)
+
+SE_diff <- sqrt(((933.0777^2)/1.645)+((1671.258^2)/1.645))
+
+z_score <- (9028-5142)/SE_diff
+
+z_score
+
+Population_difference <- 9028-5142
+
+Margin <- 1.645*SE_diff
+```
+
+Using the function moe_sum from tidycensus, we can get the margin of error for the foreign-born resident estimates at the neighborhood level, and thus calculate whether there was a difference in the estimates at a neighborhood level between 2017 and 2022. These calculations reveal that the difference in the foreign-born population at the neighborhood level between 2017 and 2022 is about 3,886 people, give or take 2,455. The z-score of 2.6 reveals that this difference is, at least, significant. 
+
+
+## Part 3 — Adjudicating
+
+Sorting the article’s claims into three buckets produces the following results:
+
+Supported: There was a significant increase in the immigrant population in the neighborhood of Mayfair between 2017 and 2022.
+
+Not supported: Mayfair's population did not significantly increase between 2017 and 2022. 
+
+Cannot be determined: It is unclear whether Philadelphia's population significantly increased between 2023 and 2024.
+
+
+## Part 4 — Rewriting the Claim
+
+The neighborhood of Mayfair, in the 19149 ZIP code of Northeast Philadelphia, had about 26,601 residents in 2022. We can be moderately confident that about 34% of those residents were foreign-born. The immigrant population there grew by at least 1,431 people from 2013–2017 to 2018–2022, even though the neighborhood’s population did not significantly increase.
+
+
