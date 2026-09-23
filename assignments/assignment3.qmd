@@ -16,7 +16,7 @@ execute:
 
 ## Introduction
 
-In this assignment, I chose to look at an article from Northeast Times, titled "Immigration Leads Philadelphia’s Population Growth After Years of Decline." This article claimed that Philadelphia’s population increased between 2023 and 2024, and that this growth was primarily driven by an increase in immigrants/foreign-born residents. More specifically, the article mentions the neighborhood of Mayfair as a representative example of this demographic change, citing an 11% increase in the total population and a 62% increase in the immigrant population between 2017 and 2022. 
+In this assignment, I chose to look at a 2025 article from Northeast Times, titled "Immigration Leads Philadelphia’s Population Growth After Years of Decline." This article claimed that Philadelphia’s population increased between 2023 and 2024, and that this growth was primarily driven by an increase in immigrants/foreign-born residents. More specifically, the article mentions the neighborhood of Mayfair as a representative example of this demographic change, citing an 11% increase in the total population and a 62% increase in the immigrant population between 2017 and 2022. 
 
 
 ## Part 1 — Reconstructing the Data
@@ -386,3 +386,7 @@ Cannot be determined: It is unclear whether Philadelphia's population significan
 The neighborhood of Mayfair, in the 19149 ZIP code of Northeast Philadelphia, had about 26,601 residents in 2022. We can be moderately confident that about 34% of those residents were foreign-born. The immigrant population there grew by at least 1,431 people (about 28%) from 2013–2017 to 2018–2022, even though the neighborhood’s population on the whole did not significantly increase.
 
 
+
+## Sources
+
+"Immigration Leads Philadelphia’s Population Growth After Years of Decline." Northeast Times, March 26, 2025. https://northeasttimes.com/2025/03/26/philadelphia-population/
