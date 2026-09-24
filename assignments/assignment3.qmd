@@ -21,7 +21,7 @@ In this assignment, I chose to look at a 2025 article from Northeast Times, titl
 
 ## Part 1 — Reconstructing the Data
 
-In order to examine the article's claims, I will look at tract-level data for the neighborhood of Mayfair, using the 5-year 2017 and 2022 ACS estimates for total population and foreign-born residents (variables B05002_001 and B05002_013, respectively). I will use tracts 332, 315.02, 315.01, 316, and 317 to estimate the neighborhood boundaries of Mayfair, as these census tract boundaries align with the neighborhood boundaries as depicted on Google Maps. Fortunately, these time periods (2013-2017 and 2018-2022) do not overlap, which will make the comparison more valid.
+In order to examine the article's claims, I will look at tract-level data for the neighborhood of Mayfair, using the 5-year 2017 and 2022 ACS estimates for total population and foreign-born residents (variables B05002_001 and B05002_013, respectively). I will use tracts 332, 315.02, 315.01, 316, and 317 to estimate the neighborhood boundaries of Mayfair, as these census tract boundaries align with the neighborhood boundaries as depicted on Google Maps. The census tracts are mapped below. Fortunately, these time periods (2013-2017 and 2018-2022) do not overlap, which will make the comparison more valid.
 
 I will not look at the population change in Philadelphia between 2023 and 2024, as the Census Bureau does not list margins of error for those estimates and the time periods for these ACS estimates overlap, making any comparison more difficult to validate.
 
@@ -32,6 +32,7 @@ library(tidycensus)
 library(ggplot2)
 library(sf)
 library(gt)
+library(tmap)
 ```
 
 
@@ -72,6 +73,30 @@ ftotal_2022 <- sum(Mayfair22$foreignE)
 pct_change_pop <- (26601-26522)/26522 * 100
 
 pct_change_foreign <- (9028-5142)/5142 * 100
+```
+
+```{r}
+#| echo: false
+
+philly_nb <- st_read("C:/Users/lbush/Documents/UPenn Stuff/MUSA-5080-portfolio/assignments/assignment3_files/philadelphia-neighborhoods.gpkg")
+
+Mayfair_nb <- philly_nb |>
+  filter(NAME == "MAYFAIR")
+
+tm_shape(philly_nb) +
+  tm_polygons(fill = "darkseagreen3")+ 
+  tm_shape(Mayfair17) +
+  tm_polygons(
+    fill ="seagreen",
+  ) +
+  tm_scale_bar() +
+  tm_title("Mayfair Neighborhood") +
+  tm_add_legend(
+    type = "polygons",
+    labels = c("Philadelphia Neighborhoods", "Mayfair Census Tracts"),
+    fill = c("darkseagreen", "seagreen"),
+    title = "Features"
+  )
 ```
 
 
