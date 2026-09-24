@@ -75,29 +75,6 @@ pct_change_pop <- (26601-26522)/26522 * 100
 pct_change_foreign <- (9028-5142)/5142 * 100
 ```
 
-```{r}
-#| echo: false 
-
-philly_nb <- st_read("C:/Users/lbush/Documents/UPenn Stuff/MUSA-5080-portfolio/assignments/assignment3_files/philadelphia-neighborhoods.gpkg")
-
-Mayfair_nb <- philly_nb |>
-  filter(NAME == "MAYFAIR")
-
-tm_shape(philly_nb) +
-  tm_polygons(fill = "darkseagreen3")+ 
-  tm_shape(Mayfair17) +
-  tm_polygons(
-    fill ="seagreen",
-  ) +
-  tm_scale_bar() +
-  tm_title("Mayfair Neighborhood") +
-  tm_add_legend(
-    type = "polygons",
-    labels = c("Philadelphia Neighborhoods", "Mayfair Census Tracts"),
-    fill = c("darkseagreen", "seagreen"),
-    title = "Features"
-  )
-```
 
 
 ```{r}
