@@ -2,7 +2,7 @@
 title: "Assignment 3: Verify the Claim"
 subtitle: "Testing a published claim about neighborhood change against the data behind it"
 author: "Luca Bushkin"
-date: today
+date: 9/25/26
 format:
   html:
     toc: true
