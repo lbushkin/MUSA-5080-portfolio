@@ -109,7 +109,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 4: Working with Spatial Data in R\n\n\nLearning basic functions in sf package\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 5:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 6:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 5: Intro to Machine Learning\n\n\nReviewing Linear Regression & Predictive Modeling\n\n\n\n\n\nSep 25, 2026\n\n\n\n\n\n\n\nWeek 4: Working with Spatial Data in R\n\n\nLearning basic functions in sf package\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 6:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -415,23 +415,23 @@
   {
     "objectID": "weekly-notes/week-05.html",
     "href": "weekly-notes/week-05.html",
-    "title": "Week 5:",
+    "title": "Week 5: Intro to Machine Learning",
     "section": "",
-    "text": "Here."
+    "text": "Reviewed linear regression and the basics of model fitting for the purpose of prediction."
   },
   {
     "objectID": "weekly-notes/week-05.html#what-we-did",
     "href": "weekly-notes/week-05.html#what-we-did",
-    "title": "Week 5:",
+    "title": "Week 5: Intro to Machine Learning",
     "section": "",
-    "text": "Here."
+    "text": "Reviewed linear regression and the basics of model fitting for the purpose of prediction."
   },
   {
     "objectID": "weekly-notes/week-05.html#key-concepts",
     "href": "weekly-notes/week-05.html#key-concepts",
-    "title": "Week 5:",
+    "title": "Week 5: Intro to Machine Learning",
     "section": "Key Concepts",
-    "text": "Key Concepts\nHere."
+    "text": "Key Concepts\nLinear regression can be used for inference (traditional statistics) or prediction (machine learning)\n\nExample: Rent as a function of income\n\nFor inference, interested in slope/coefficient as statistically significant\nBut for predictions, the statistical significance of any one coefficient is less important\nWant to know where rents exceed our expectations, given a specific median income\nMore interested in knowing how well model predicts values on unseen data - we may justify including an insignificant variable if it increases our predictive power\n\n\nScale of machine learning models:\nSimpler - Linear - Lasso/Ridge - Logistic - Trees & Random Forest - Boosting - Neural Networks - More complex\n\nParametric: assumes a functional form\nNon-parametric: more difficult to interpret\n\nNoisy: i.e. uncertain; data is reflected in model’s residuals (larger) and slope (flatter)\nFor predictions, we use test and training datasets for create our models\n\nTypical split: 80% training, 20% test\nWant to minimize RMSE\n\nEx: our rent model is off by $300 on average\n\nK-fold cross validation: breaking up data into “k” number of folds (5, 10, etc.)\n\nTraining dataset = k-1 folds; run “k” number of times to find an average RMSE\n\nOverfitting: model has been tuned to the nopise in our ttraining dataset; this model fails to work with test/new data\nMulti-collinearity: variables are highly correlated\n\nLess of a problem for prediction than inference"
   },
   {
     "objectID": "weekly-notes/week-05.html#questions-i-still-have",

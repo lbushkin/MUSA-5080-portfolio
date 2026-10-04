@@ -1,20 +1,44 @@
 ---
-title: "Week 5: "
-description: ""
-date: 2026-09-11
+title: "Week 5: Intro to Machine Learning"
+description: "Reviewing Linear Regression & Predictive Modeling"
+date: 2026-09-25
 ---
 
 ## What We Did
 
-Here.
+Reviewed linear regression and the basics of model fitting for the purpose of prediction.
 
 ## Key Concepts
 
-Here.
+Linear regression can be used for inference (traditional statistics) or prediction (machine learning)
+
+- Example: Rent as a function of income
+  - For inference, interested in slope/coefficient as statistically significant
+  - But for predictions, the statistical significance of any one coefficient is less important
+  - Want to know where rents exceed our expectations, given a specific median income
+  - More interested in knowing how well model predicts values on unseen data - we may justify including an insignificant variable if it increases our predictive power
+  
+  
+Scale of machine learning models:
+
+Simpler - Linear - Lasso/Ridge - Logistic - Trees & Random Forest - Boosting - Neural Networks - More complex
+
+- Parametric: assumes a functional form
+- Non-parametric: more difficult to interpret
+
+
+Noisy: i.e. uncertain; data is reflected in model's residuals (larger) and slope (flatter)
 
 
 
-## Questions I Still Have
+For predictions, we use test and training datasets for create our models
 
-- W
-
+- Typical split: 80% training, 20% test
+- Want to minimize RMSE
+  - Ex: our rent model is off by $300 on average
+- K-fold cross validation: breaking up data into "k" number of folds (5, 10, etc.)
+  - Training dataset = k-1 folds; run "k" number of times to find an average RMSE
+- Overfitting: model has been tuned to the nopise in our ttraining dataset; this model fails to work with test/new data
+- Multi-collinearity: variables are highly correlated
+  - Less of a problem for prediction than inference 
+ 
