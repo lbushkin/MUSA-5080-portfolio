@@ -1,20 +1,51 @@
 ---
-title: "Week 6: "
-description: ""
-date: 2026-09-11
+title: "Week 7: Spatial Autocorrelation"
+description: "Clustering & Moran's I"
+date: 2026-10-16
 ---
 
 ## What We Did
 
-Here.
+Review of last week's concepts, as well as introduction to spatial autocorrelation and Moran's I. 
 
 ## Key Concepts
 
-Here.
+Summary of linear regression transformations:
+
+- Log of a variable: Corrects for right skew; "a 1% increase in x → β/100 increase in y"
+  - If both the predictor and the outcome are logged, the interpretation becomes "a 1% increase in x goes with about β % change in y (an elasticity)"
+  - If the outcome is logged but the predictor is not, the interpretation becomes "a 1-unit increase in x goes with about 100·β % change in y"
+- Square of a variable: To correct for a curve or plateau; included in model as x + x^2
+  - Interpretation: positive linear term, negative squared term → rises, then levels off or falls
+- Categorical variable: Should use if it makes sense logically (ex: housing type), or if a numeric variable seems to have specific breaks
+  - Coefficients are written for k-1 categories and compared to the "reference" level
+    - Ex: If Downtown is the reference level, then the coefficient of Northeast_district is relative to the Downtown area
+  - case_when(): writing the rules out
+  - cut(): determining the breakpoints
+  - Extra small groups should be merged before cross-validation, or else it will mess up the predictive power of the model
+- Interaction variable: Reflects how a variable interacts differently based on the categorical variable
+  - Ex: Income has a different impact on median rent based on the neighborhood
+  - Written as: variable * categorical variable
+- Fixed effect: Variable that captures some general categorical effect, usually location (ex: neighborhood, district, etc.)
+
+
+Clustering & Moran's I:
+
+- Tobler's First Law of Geography: All things are related, but near things are more related
+- Moran's I: the slope of the relationship between average of k neighbors' residuals vs observation's residuals
+  - Equation: Wij * Sum of (individual error - avg error)(neighbor's error - avg error) / sum of (individual error - avg error)^2
+    - Top part of equation functions like a matrix multiplied by a weight
+    - Weight = number of observations / number of neighbor pairs
+  - Ex: (Error A - avg error)(Error B - avg error) + (Error B - avg error)(Error C - avg error) + ... (*2, to account for reciprocal nature of neighbors) / (Error A - avg error)^2 + (Error B - avg error)^2 + ...
+  - Moran's I can fall between 0 and 1; a higher value means more clustering (zero signifies randomness)
+- Monte Carlo simulation: shuffles residuals multiple times to calculate Moran's I; if the "real" I is larger than the simulation I, then the clustering is significant
+- Clustering can signify that our model is missing a spatial variable 
+- Spatial lag is good for inference about spillovers, but not appropriate for predictive models
+
+  
+  
 
 
 
-## Questions I Still Have
 
-- W
 

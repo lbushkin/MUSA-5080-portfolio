@@ -38,7 +38,7 @@ For predictions, we use test and training datasets for create our models
   - Ex: our rent model is off by $300 on average
 - K-fold cross validation: breaking up data into "k" number of folds (5, 10, etc.)
   - Training dataset = k-1 folds; run "k" number of times to find an average RMSE
-- Overfitting: model has been tuned to the nopise in our ttraining dataset; this model fails to work with test/new data
+- Overfitting: model has been tuned to the nopise in our training dataset; this model fails to work with test/new data
 - Multi-collinearity: variables are highly correlated
   - Less of a problem for prediction than inference 
  

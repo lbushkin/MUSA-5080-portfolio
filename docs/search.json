@@ -109,7 +109,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 5: Intro to Machine Learning\n\n\nReviewing Linear Regression & Predictive Modeling\n\n\n\n\n\nSep 25, 2026\n\n\n\n\n\n\n\nWeek 4: Working with Spatial Data in R\n\n\nLearning basic functions in sf package\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 6:\n\n\n\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 7: Spatial Autocorrelation\n\n\nClustering & Moran’s I\n\n\n\n\n\nOct 16, 2026\n\n\n\n\n\n\n\nWeek 5: Intro to Machine Learning\n\n\nReviewing Linear Regression & Predictive Modeling\n\n\n\n\n\nSep 25, 2026\n\n\n\n\n\n\n\nWeek 4: Working with Spatial Data in R\n\n\nLearning basic functions in sf package\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: GGPLOT & Addressing Margins of Error\n\n\nUsing ggplot for data visualization and addressing margins of error in data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Dplyr & Census Data\n\n\nDplyr review and practice with census data exercise.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -289,23 +289,23 @@
   {
     "objectID": "weekly-notes/week-06.html",
     "href": "weekly-notes/week-06.html",
-    "title": "Week 6:",
+    "title": "Week 7: Spatial Autocorrelation",
     "section": "",
-    "text": "Here."
+    "text": "Review of last week’s concepts, as well as introduction to spatial autocorrelation and Moran’s I."
   },
   {
     "objectID": "weekly-notes/week-06.html#what-we-did",
     "href": "weekly-notes/week-06.html#what-we-did",
-    "title": "Week 6:",
+    "title": "Week 7: Spatial Autocorrelation",
     "section": "",
-    "text": "Here."
+    "text": "Review of last week’s concepts, as well as introduction to spatial autocorrelation and Moran’s I."
   },
   {
     "objectID": "weekly-notes/week-06.html#key-concepts",
     "href": "weekly-notes/week-06.html#key-concepts",
-    "title": "Week 6:",
+    "title": "Week 7: Spatial Autocorrelation",
     "section": "Key Concepts",
-    "text": "Key Concepts\nHere."
+    "text": "Key Concepts\nSummary of linear regression transformations:\n\nLog of a variable: Corrects for right skew; “a 1% increase in x → β/100 increase in y”\n\nIf both the predictor and the outcome are logged, the interpretation becomes “a 1% increase in x goes with about β % change in y (an elasticity)”\nIf the outcome is logged but the predictor is not, the interpretation becomes “a 1-unit increase in x goes with about 100·β % change in y”\n\nSquare of a variable: To correct for a curve or plateau; included in model as x + x^2\n\nInterpretation: positive linear term, negative squared term → rises, then levels off or falls\n\nCategorical variable: Should use if it makes sense logically (ex: housing type), or if a numeric variable seems to have specific breaks\n\nCoefficients are written for k-1 categories and compared to the “reference” level\n\nEx: If Downtown is the reference level, then the coefficient of Northeast_district is relative to the Downtown area\n\ncase_when(): writing the rules out\ncut(): determining the breakpoints\nExtra small groups should be merged before cross-validation, or else it will mess up the predictive power of the model\n\nInteraction variable: Reflects how a variable interacts differently based on the categorical variable\n\nEx: Income has a different impact on median rent based on the neighborhood\nWritten as: variable * categorical variable\n\nFixed effect: Variable that captures some general categorical effect, usually location (ex: neighborhood, district, etc.)\n\nClustering & Moran’s I:\n\nTobler’s First Law of Geography: All things are related, but near things are more related\nMoran’s I: the slope of the relationship between average of k neighbors’ residuals vs observation’s residuals\n\nEquation: Wij * Sum of (individual error - avg error)(neighbor’s error - avg error) / sum of (individual error - avg error)^2\n\nTop part of equation functions like a matrix multiplied by a weight\nWeight = number of observations / number of neighbor pairs\n\nEx: (Error A - avg error)(Error B - avg error) + (Error B - avg error)(Error C - avg error) + … (*2, to account for reciprocal nature of neighbors) / (Error A - avg error)^2 + (Error B - avg error)^2 + …\nMoran’s I can fall between 0 and 1; a higher value means more clustering (zero signifies randomness)\n\nMonte Carlo simulation: shuffles residuals multiple times to calculate Moran’s I; if the “real” I is larger than the simulation I, then the clustering is significant\nClustering can signify that our model is missing a spatial variable\nSpatial lag is good for inference about spillovers, but not appropriate for predictive models"
   },
   {
     "objectID": "weekly-notes/week-06.html#questions-i-still-have",
