@@ -1,0 +1,27 @@
+---
+title: "Week 9: Introduction to Predictive Policing"
+description: "Poisson Modeling and Predicting Crime"
+date: 2026-10-30
+---
+
+## What We Did
+
+Learned about Poisson models and 
+
+## Key Concepts
+
+Introducing Poisson 
+
+- Used for non-linear relationships, specifically right-skew distribution with a lower bound of zero
+- 
+
+
+Predictive Policing
+
+- The original idea was to take human bias out of police decision-making, arguing that it would be "more objective"
+  - Could be place-based (i.e. certain neighborhoods) or person-based (i.e. identifying "risky" individuals)
+- "Dirty data": data that is biased
+  - Leads to a confirmation feedback loop
+  - Ex: Chicago heat list
+  - These models end up predicting and reinforcing police activity, not predicting the actual behavior of residents
+- 

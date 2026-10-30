@@ -20,10 +20,9 @@ Chicago has long faced housing affordability challenges, and home prices vary co
 
 ## Part 0: Setup (provided)
 
-These helpers are to help you get off the ground.
-
 ```{r}
 #| label: setup
+#| echo: false 
 library(tidyverse)
 library(tidycensus)
 library(sf)
@@ -107,6 +106,7 @@ all_sales %>% st_drop_geometry() %>% count(split)
 
 
 ```{r}
+#| echo: false 
 #| label: log-start
 model_log <- tibble(
   model   = character(),
@@ -128,6 +128,7 @@ We first examined the dataset, focusing on variables related to the physical cha
 Our initial spatial analysis revealed a clear geographic pattern: low-priced homes are concentrated primarily in the South Side of Chicago, while high-priced homes are more prevalent in the northern part of the city, particularly near Lake Michigan. This pattern suggested that location may play an important role in determining home sale prices, motivating us to investigate tract level and neighborhood level factors in our predictive model.
 
 ```{r}
+#| echo: false 
 #| label: part-1
 summary(all_sales$sale_price)
 all_sales <- all_sales %>%
@@ -150,6 +151,7 @@ We then examined the distributions of key housing characteristics to understand 
 - Building age: The relationship appears nonlinear, with both newer and older buildings associated with higher sale prices.
 - Number of bedrooms: Bedroom counts are unevenly distributed across the dataset. We therefore considered re-categorizing this variable to better represent differences in housing types and improve model performance.
 ```{r}
+#| echo: false 
 
 ggplot(all_sales, aes(x = building_000sf, y = sale_price)) +
   geom_point(alpha = 0.5) +
@@ -211,6 +213,8 @@ For the base model, we used:
 We used a box plot to check that  houses that have more bedrooms generally had a higher sale price.
 
 ```{r}
+#| echo: false 
+
 all_sales <- all_sales %>%
   mutate(building_sf = building_000sf *1000,
         lotsize_sqft = lotsize_acre * 53650)
@@ -218,6 +222,7 @@ all_sales <- all_sales %>%
 
 
 ```{r}
+#| echo: false 
 
 all_sales <- all_sales %>%
   mutate(
@@ -244,6 +249,7 @@ all_sales %>%
 ```
 
 ```{r}
+#| echo: false 
 #| label: categorical-look
 
 ggplot(all_sales, aes(x = Cat_bedroom_num, y = sale_price)) +
@@ -268,6 +274,7 @@ ggplot(all_sales, aes(x = Cat_bedroom_num, y = sale_price)) +
 
 
 ```{r}
+#| echo: false 
 #| label: m1
 train_set <- all_sales %>%
   filter(split == "train")
@@ -313,6 +320,8 @@ Lot sizes are concentrated within a relatively narrow range, so we applied a log
 For fireplaces, the data includes a sufficient number of homes with one or more fireplaces, so we thought it important to add it to our model.
 
 ```{r}
+#| echo: false 
+
 all_sales <- all_sales %>%
   filter(!is.na(lotsize_sqft),
          !is.na(num_fireplaces)
@@ -359,6 +368,7 @@ ggplot(all_sales, aes(x = factor(Cat_fireplaces_num))) +
 ```
 
 ```{r}
+#| echo: false 
 #| label: Modified Baseline
 
 train_set <- all_sales %>%
@@ -401,7 +411,9 @@ We then considered how spatial variables may help to better indicate the value o
 ### Distance to L
 Since the L is one of the public transit options that connects different parts of Chicago, we believed it was important to include the nearest distance to an L station in our model. We found that the further a home is from an L station, the lower the sale price. 
 Because it does not fully follow a linear trend, we found that logging the distance to the L station improved the model. 
+
 ```{r}
+#| echo: false 
 #| label: L_stations
 
 L_stations <- st_read("https://data.cityofchicago.org/resource/3tzw-cg4m.geojson") |>
@@ -453,6 +465,7 @@ We see that while the CV_RMSE improved, the Moran's I increased slightly, sugges
 We then added proximity to outdoor seating. We assumed that proximity to outdoor seating may affect housing prices because it reflects the types of businesses that are nearby.
 
 ```{r}
+#| echo: false 
 outdoor_seat <- st_read("https://data.cityofchicago.org/api/v3/views/qnjv-hj2q/query.geojson") |>
   st_transform(st_crs(all_sales))
 
@@ -498,6 +511,7 @@ Bus is another common type of public transit in Chicago, and we assumed that the
 Because the bus stops are dense and people may use different bus stop for different route, we calculate the average distance to 5 closest bus stops. 
 
 ```{r}
+#| echo: false 
 crs_projected <- 3435
 bus_stops <- st_read(
   "https://data.cityofchicago.org/api/v3/views/qs84-j7wh/query.geojson?accessType=DOWNLOAD",
@@ -555,6 +569,7 @@ We also looked at the social risks surrounding a house. Crime is an important in
 We selected all the crime data from 2022 to 2023 and counted how many of them happened within 500 feet of a house.
 
 ```{r}
+#| echo: false 
 
 crime_2022 <- read.csv("assignments/assignment5_files/crime_2022.csv")
 
@@ -621,6 +636,7 @@ Although RMSE did not improve from the last model, Moran's I did.
 The characteristics of the surrounding neighborhood may also influence home sale prices. To capture this neighborhood-level effect, we first incorporated the median household income of the census tract in which each property was located. 
 
 ```{r}
+#| echo: false 
 #| output: false
 #| message: false
 #| warning: false
@@ -685,6 +701,7 @@ Both indicators improved from the last model.
 We assumed some neighborhood demographic information may impact house value. We looked at whether the educational attainment of the population and the percentage of elderly people impacted house price. We assumed that a higher share of people with Bachelor's degrees, as well as a higher share of elderly in a tract's population could make a given house more valuable.
 
 ```{r}
+#| echo: false 
 #| label: Demographic Variables
 #| output: false
 #| message: false
@@ -793,6 +810,8 @@ Both indicators improved from the last model.
 We also wanted to look at the impact of amenities. Instead of looking at all possible amenities, we decided to only look at groceries, as that is an amenity that people need to use on a very regular basis. We assumed that the more open grocery stores near the a house, the more convenient the house location was, and therefore the more valuable the property.
 
 ```{r}
+#| echo: false 
+
 grocery <- st_read(
   "https://data.cityofchicago.org/api/v3/views/3e26-zek2/query.geojson",
   quiet = TRUE
@@ -841,6 +860,8 @@ Both indicator improved from the last model.
 Downtown Chicago has many shopping and dining locations, and it attracted many visitors. We wanted to check whether the distance to the CBD area affected housing price also.
 
 ```{r}
+#| echo: false 
+
 cbd <- st_read("https://data.cityofchicago.org/api/v3/views/fe34-kcci/query.geojson?accessType=DOWNLOAD") %>%
   st_as_sf(wkt = "the_geom", crs = 4326) %>%
   st_transform(3435)            # Illinois East State Plane, feet
@@ -883,6 +904,8 @@ The CV-RMSE for the `r model_log$added[model_log$model == "m10"]` model is $`r f
 Our last variable is a fixed effect that accounts for differences between neighborhoods that cannot be explicitly identified. These differences may include unjustifiable factors like social infrastructure, kinship, and community identity. It may also include the sanitary condition, vacancy, greenery, or other physical factors.
 
 ```{r}
+#| echo: false 
+
 community <- st_read(
   "https://data.cityofchicago.org/resource/y6yq-dbs2.geojson"
 )
@@ -963,6 +986,8 @@ This will therefore be our final model.
 - Many community fixed-effect coefficients are statistically significant. For example, Lincoln Park, Gold Coast, and Old Town have large positive coefficients relative to the omitted reference community, while several South and West Side communities have negative coefficients. 
 
 ```{r}
+#| echo: false 
+
 model_log_final <- model_log  %>%
   distinct(model, .keep_all = TRUE) %>%
   arrange(as.integer(gsub("m", "", model)))
@@ -975,6 +1000,8 @@ model_log_final
 
 ### Residual Map: where do we over predict?
 ```{r}
+#| echo: false 
+
 m11 <- lm(
   f11,
   data = st_drop_geometry(train_set),
@@ -1032,6 +1059,8 @@ Compared with the baseline model, which tends to underpredict home prices on the
 Although the residual map does not reveal a clear spatial pattern, we further examined whether prediction errors were associated with sale prices (low v. high prices). Specifically, we investigated whether lower-priced homes were more likely to be over-predicted, which could explain a systematic bias of the model. Assessors judge their work with the ratio of predicted value to sale price, so our analysis included this ratio to help answer this point.
 
 ```{r}
+#| echo: false 
+
 train_sales_extra <- train_set|>
   mutate(m_final_pred = fitted.values(m11),
          ratio = m_final_pred/sale_price)
@@ -1055,6 +1084,8 @@ p_over_under_price
 
 
 ```{r}
+#| echo: false 
+
 train_sales_extra  <-  train_sales_extra %>%
   mutate(
     price_category = cut(
@@ -1097,6 +1128,8 @@ We divided the low / medium / high split in the same way as we did in the beginn
 Refit your final recipe on all training sales, then predict every test house. Set `f_final` to your final formula.
 
 ```{r}
+#| echo: false 
+
 #| label: predict-test
 m_final <- lm(f11, data = st_drop_geometry(train_set))
 
@@ -1145,9 +1178,13 @@ Finally, while a tax assessment model may help people lower their taxes, if it i
 ### Who did what
 
 | Name | Main contribution                                                                                         |
+
 |Luca  | Looked at some variables independently and contributed to the final model; reviewed file before submission|
+
 |Jonah | Looked at some variables independently and contributed to the final model; added some reflection text     |
+
 |Rita  | Looked at some variables independently and contributed to the final model; created main file              |
+
 |Ryska | Looked at some variables independently and contributed to the final model; reviewed file before submission|
 
 
