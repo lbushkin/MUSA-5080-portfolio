@@ -2,6 +2,7 @@
 title: "Assignment 4: Building Features, Watching What Happens"
 subtitle: "MUSA 5080 · Integrates Weeks 1–5 · Due Friday, October 16"
 author: "Luca Bushkin"
+date: 2026-10-16
 format:
   html:
     toc: true
@@ -559,9 +560,15 @@ Sometimes a number works better as groups, either because the relationship isn't
 
 ```{r}
 #| label: categorical-example
+
 tracts <- tracts %>%
   mutate(
-    num_bedrooms = factor(ring, levels = c("Core", "Inner", "Outer"))
+    ring = case_when(
+      dist_ch_mi < 2 ~ "Core",
+      dist_ch_mi < 5 ~ "Inner",
+      TRUE           ~ "Outer"
+    ),
+    ring = factor(ring, levels = c("Core", "Inner", "Outer"))
   )
 
 tracts %>% st_drop_geometry() %>% count(ring)

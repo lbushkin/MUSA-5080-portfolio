@@ -6,22 +6,77 @@ date: 2026-10-30
 
 ## What We Did
 
-Learned about Poisson models and 
+Learned about Poisson models and how they relate to predictive policing models.
 
 ## Key Concepts
 
 Introducing Poisson 
 
 - Used for non-linear relationships, specifically right-skew distribution with a lower bound of zero
-- 
-
+- Coefficient is the multiplicative change in expected count per one-unit change in x
+  - Ex: 
+- Poisson models assume that the variance = mean
+  - If the variance is much bigger than the mean: "overdispersion"
+  - I.e. if data is "really" skewed, might need to use a negative binomial model instead
 
 Predictive Policing
 
 - The original idea was to take human bias out of police decision-making, arguing that it would be "more objective"
   - Could be place-based (i.e. certain neighborhoods) or person-based (i.e. identifying "risky" individuals)
-- "Dirty data": data that is biased
+- "Dirty data": data that is biased, incomplete, or manipulated
+  - Not all crimes are reported, and we know that those that are, are influenced by racial and class prejudices
   - Leads to a confirmation feedback loop
   - Ex: Chicago heat list
   - These models end up predicting and reinforcing police activity, not predicting the actual behavior of residents
+- Broken windows theory: lack of maintenance can reflect precursor for criminal behavior
+  - No longer accepted, because it punishes individuals for perceived disorderly behavior
+  - I.e. profiling
 - 
+
+
+Example of a predictive policing model: burglaries in Philadelphia
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+library(caret)
+library(spdep)
+library(nngeo)
+library(sf)
+library(dplyr)
+library(tidyr)
+library(httr)
+library(jsonlite)
+library(tigris)
+options(scipen = 999)
+
+burg_sql <- function(year) {
+  paste0("SELECT the_geom, dispatch_date, text_general_code
+          FROM incidents_part1_part2
+          WHERE text_general_code = 'Burglary Residential'
+          AND dispatch_date >= '", year, "-01-01'
+          AND dispatch_date <  '", year + 1, "-01-01'
+          AND the_geom IS NOT NULL")
+}
+
+burg_2024 <- carto_get(burg_sql(2024)) |> 
+  st_transform(2272)  # features
+burg_2025 <- carto_get(burg_sql(2025)) |>
+  st_transform(2272)  # outcome
+
+philly <- counties("PA", cb = TRUE, progress_bar = FALSE) %>%
+  filter(NAME == "Philadelphia") %>%
+  st_transform(2272)
+
+c(burg_2024 = nrow(burg_2024), burg_2025 = nrow(burg_2025))
+
+ggplot() +
+  geom_sf(data = philly, fill = "grey95", color = "grey60") +
+  geom_sf(data = burg_2025, size = 0.2, alpha = 0.4, color = "darkred") +
+  labs(title = "Residential burglaries, 2025") +
+  theme_void()
+
+
+```
+
