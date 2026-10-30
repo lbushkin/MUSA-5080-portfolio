@@ -1,0 +1,15 @@
+{
+  "hash": "0d190ac2e3c916420c7dffee8771553b",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Week 8: More on Autocorrelation\"\ndescription: \"Introducing LISA\"\ndate: 2026-10-23\n---\n\n## What We Did\n\nReviewed Moran's I and introduced LISA (i.e. local Moran's I).\n\n## Key Concepts\n\nMore on Moran's I:\n\n- Moran's I is like standard deviation: how representative is the mean compared to the rest of the sample?\n- Reminder: close to 0 means no clustering, close to -1 or 1 means very clustered\n- Weight matrix (\"w_ij\"): different ways to operationalize who is a neighbor\n  - Queen vs Rook contiguity matrices for polygons \n  - Rows in the weight matrix can be standardized (i.e. not always just 1s and 0s)\n- Limitations: it doesn't tell us /where/ the clusters are happening\n\n\nLISA:\n\n- Local Indicator of Spatial Association\n- Essentially a Moran's I for every observation\n  - I_i = z_i / m_2 * sum(w_ij * z_j)\n  - m_2 = sum(z_i^2) / n\n    - z_i = variation in each observation\n    - m_2 = standardization of the variation in each observation (average of all deviations from mean)\n- Note: unlike Global Moran's I, LISA can be bigger than |1| sometimes\n- Individual Moran's I values --> descriptive \"quadrants\"\n  - High-high: Observation and its neighbors are higher than the mean, therefore under-predicted; suggests missing spatial variable (amenity)\n  - High-low: Observation is greater than the mean, but neighbors are less, therefore there is something unusual about the individual observation\n  - Low-high: Observation is less than the mean, but the neighbors are higher, therefore there is something unsual about the individual observation\n  - Low-low: Observation and its neighbors are lower than the mean, therefore over-predicted; suggests missing spatial variable (dis-amenity)\n- Implications\n  - For tax assessments, an over-prediction means a property was over-taxed\n\n\nCalculating LISA in R:\n\n  - Create weight matrix with nb2listw() for nearest neighbors (not contiguity)\n\nLISA function:\n\n::: {.cell}\n\n```{.r .cell-code}\nLISA_function <- function(resid, w, alpha = 0.01) {\n    lm_perm <- localmoran_perm(resid, w, nsim = 499) #perm means permutations\n    z <- resid - mean(resid)\n    lag <- lag.list(w,z)\n    p <- lm_perm[, \"Pr(z != E(Ii)) Sim\"]\n    case_when(\n      p >= alpha       ~ \"Not significant\",\n      z > 0 & lag > 0  ~ \"High-High\",\n      z < 0 & lag < 0  ~ \"Low-Low\",\n      z > 0 & lag < 0  ~ \"High-Low\",\n      TRUE             ~ \"Low - High\"\n    )\n}\n```\n:::\n\n  \n\nDetermining Neighbors\n\n- Buffer count\n- K nearest neighbors (mean distance)\n- Single nearest feature\n\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

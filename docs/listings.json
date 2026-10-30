@@ -3,6 +3,7 @@
     "listing": "/assignments/index.html",
     "items": [
       "/assignments/assignment4.html",
+      "/assignments/assign5_final.html",
       "/assignments/assignment3.html",
       "/assignments/assignment2.html"
     ]
@@ -10,7 +11,8 @@
   {
     "listing": "/weekly-notes/index.html",
     "items": [
-      "/weekly-notes/week-06.html",
+      "/weekly-notes/week-08.html",
+      "/weekly-notes/week-07.html",
       "/weekly-notes/week-05.html",
       "/weekly-notes/week-04.html",
       "/weekly-notes/week-03.html",

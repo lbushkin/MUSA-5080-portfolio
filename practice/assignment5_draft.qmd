@@ -1,0 +1,618 @@
+---
+title: "Assignment 5: House Price Prediction, Chicago"
+subtitle: "MUSA 5080 · Team assignment"
+author: "Team Red-Purple: Luca, Ryska, Rita, Jonah"
+date: last-modified
+format:
+  html:
+    toc: true
+    code-fold: show
+execute:
+  warning: false
+  message: false
+---
+
+## The assignment
+
+In class we built a house price model for Philadelphia. Now your team does it for a city you haven't modeled: **Chicago**.
+
+The Cook County Assessor's Office has to value every home in the county, including the vast majority that didn't sell this year. Assessments drive property tax bills. When they're wrong in a systematic way, some households pay more than their share. A 2017 *Chicago Tribune* investigation, "The Tax Divide," found exactly that in Cook County: lower-value homes were assessed at higher shares of their worth than expensive ones.
+
+Build a model that predicts **single-family sale prices in Chicago, 2023–2025**, using only the tools from this course. The file contains **only features of the house itself**. Everything about location is yours to build.
+
+### A real test
+
+| File | What's in it |
+|---|---|
+| `chicago_train.csv` | About 80% of the houses, **with** sale prices |
+| `chicago_test.csv` | The other 20%, **without** sale prices. You predict them; we score you. |
+
+The test houses were held out by house, not by sale, so a house that sold twice is entirely on one side. Your CV RMSE is your estimate. Your test RMSE is the truth. **If they're far apart, something leaked.** 
+
+**Due:** Friday, October 30. All teammates renders the file on their portfolio and every member submits that link on Canvas. One teammate uploads `team_XX_predictions.csv`.
+
+**Individual accountability:** Q7 on October 30 asks each of you about *this* model: which features you used and why, your CV and test RMSE, and where the model fails worst. Make sure everyone can explain all of it.
+
+### Rules
+
+::: {.callout-important}
+## 1. Clean training rows once, in Part 1. Never drop test rows.
+You must predict every test house, so fill NAs in a feature rather than filtering.
+
+## 2. Stay inside the time window
+Open data from 2023–2025 only.
+
+## 3. No leakage
+Nothing built from sale prices. *Would the Assessor have this number for a house that didn't sell?*
+
+## 4. The outcome stays in dollars
+Transform predictors, not `sale_price`.
+
+## 5. No prices from the test fold or the future
+No features built from other houses' sale prices. 
+:::
+
+### Please include in your final rendered qmd for this assignment:
+
+| | |
+|---|---|
+| **Model log** | Every model you tried, in order, with CV RMSE and Moran's I. Each row has a note saying why you tried it. |
+| **Features** | Incorporate the feature engineering tricks - including the spatial ones covered these past few weeks. 
+| **Diagnostics** | Residual maps for your baseline and final model, and what changed. |
+| **Error analysis** | Where your final model fails worst, and whose homes it over-values (Part 4). |
+| **Reasoning** | Choices justified by evidence from your own analysis.
+
+---
+
+## Part 0: Setup (provided)
+
+These helpers are to help you get off the ground.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(tidycensus)
+library(sf)
+library(caret)
+library(spdep)
+library(nngeo)
+options(scipen = 999)
+```
+
+```{r}
+#| label: helpers
+check_na <- function(formula, df) {
+  vars <- all.vars(formula)
+  bad <- vars[sapply(vars, function(v) any(is.na(df[[v]])))]
+  if (length(bad) > 0) {
+    stop("These variables have NAs: ", paste(bad, collapse = ", "),
+         ". Fill them or choose another variable (Rule 1).")
+  }
+}
+
+# 10-fold CV RMSE, same folds every time
+cv_rmse <- function(formula, data) {
+  df <- if (inherits(data, "sf")) st_drop_geometry(data) else data
+  check_na(formula, df)
+  set.seed(5080)
+  fit <- train(formula, data = df, method = "lm",
+               trControl = trainControl(method = "cv", number = 10))
+  fit$results$RMSE
+}
+
+# Each house's prediction from the fold where it was held out
+cv_pred <- function(formula, data) {
+  df <- if (inherits(data, "sf")) st_drop_geometry(data) else data
+  check_na(formula, df)
+  set.seed(5080)
+  fit <- train(formula, data = df, method = "lm",
+               trControl = trainControl(method = "cv", number = 10,
+                                        savePredictions = "final"))
+  fit$pred %>% arrange(rowIndex) %>% pull(pred)
+}
+
+# Chicago Data Portal (Socrata) -> sf. `where` is a SoQL filter.
+socrata_get <- function(dataset, where, select = NULL, limit = 200000) {
+  where <- str_squish(where)
+  q <- paste0("$where=", URLencode(where, reserved = TRUE), "&$limit=", limit)
+  if (!is.null(select)) q <- paste0(q, "&$select=", URLencode(str_squish(select), reserved = TRUE))
+  url <- paste0("https://data.cityofchicago.org/resource/", dataset, ".geojson?", q)
+  tmp <- tempfile(fileext = ".geojson")
+  resp <- tryCatch(download.file(url, tmp, quiet = TRUE), error = function(e) e)
+  if (inherits(resp, "error")) stop("Portal request failed. Open this URL in a browser to see why:\n", url)
+  st_read(tmp, quiet = TRUE)
+}
+```
+
+### Load both files together (provided)
+
+Build every feature on `all_sales`, so training and test houses get identical features. Split off `train` again whenever you add something.
+
+```{r}
+#| label: load
+all_sales <- bind_rows(
+  read_csv("assignments/assignment5_files/chicago_train.csv", show_col_types = FALSE) %>% mutate(split = "train"),
+  read_csv("assignments/assignment5_files/chicago_test.csv",  show_col_types = FALSE) %>% mutate(split = "test")
+) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(3435)            # Illinois East State Plane, feet
+
+all_sales %>% st_drop_geometry() %>% count(split)
+```
+
+Useful sources: the [Chicago Data Portal](https://data.cityofchicago.org) (find a dataset's ID under its API button), the Census via `tidycensus`, and Cook County's open data.
+
+---
+
+## Part 1: Clean and explore
+
+Decide which training sales are market sales. Record each rule, why, and how many it removed. Then explore: at least four plots, including a map of price.
+
+```{r}
+#| label: part-1
+ggplot(all_sales, aes(x = sale_price)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = building_age)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = building_000sf)) + geom_histogram(bins = 30) + theme_minimal()
+
+ggplot(all_sales, aes(x = building_age, y = sale_price)) + geom_point(alpha = 0.5)
+
+ggplot(all_sales, aes(x = building_000sf, y = sale_price)) + geom_point(alpha = 0.5)
+
+
+train_sales <- all_sales %>% filter(split == "train")
+  
+
+train_sales <- train_sales |>
+  mutate(
+    price_category = cut(
+      sale_price,
+      breaks = c(-Inf, 184500, 302950, Inf),
+      labels = c("low", "medium", "high")
+    )
+  )
+
+ggplot(train_sales) +
+  geom_sf(aes(color = price_category), alpha = 0.7, size = 0.3) +
+  theme_minimal()
+```
+
+**Answer:** What in your exploration shaped your modeling choices?
+
+*Your answer:* 
+We would like to include building age in our baseline model, but as a squared term. This is because the scatterplot and histogram show that the building age distribution is curved. Sale price seems to be right-skewed, but we have decided not to adjust for the skew in our baseline model.  
+
+---
+
+## Part 2: Build the model
+
+Start with a structure-only baseline. Then add features in steps you can learn from, logging each one. Keep the log in a tibble with columns `model`, `added`, `cv_rmse`, `moran_i`, `notes`.
+
+```{r}
+#| label: Setting up model Log
+model_log <- tibble(
+  model   = character(),
+  added   = character(),
+  cv_rmse = numeric(),
+  moran_i = numeric(),
+  notes   = character()
+)
+```
+
+
+```{r}
+#| label: Baseline model
+
+all_sales$num_bedrooms <- as.factor(all_sales$num_bedrooms)
+
+all_sales$num_full_baths <- as.factor(all_sales$num_full_baths)
+
+all_sales <- all_sales |>
+  mutate(building_sf = building_000sf*1000)
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f1 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths
+
+m1 <- lm(f1, data = train_sales)
+summary(m1)
+
+train_sales <- train_sales |> 
+  mutate(resid_m1 = residuals(m1))
+
+coords <- st_coordinates(train_sales) #all 23,200 training set coords
+w_knn  <- nb2listw(knn2nb(knearneigh(coords, k = 5)), style = "W")
+mc1 <- moran.mc(train_sales$resid_m1, w_knn, nsim = 23199)
+mc1$statistic
+mc1$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m1", added = "Baseline",
+          cv_rmse = cv_rmse(f1, train_sales),
+          moran_i = mc1$statistic,
+          notes = "sf, age, bedrooms, baths")
+
+model_log
+```
+
+Our baseline model included the building square footage, building age, the number of bedrooms, and the number of full baths as predictors for sale price. The CV RMSE shows us that this model is not particularly accurate: the model is off by about  $349,596. The Moran's I value (0.35) tells us that the model does not have any severe clustering issues, however. 
+
+```{r}
+#| label: Model 2
+
+L_stations <- st_read("https://data.cityofchicago.org/resource/3tzw-cg4m.geojson") |>
+  st_transform(st_crs(all_sales))
+
+ggplot(L_stations) + geom_sf() #just checking
+
+
+all_sales <- all_sales %>%
+  mutate(L_500ft = lengths(st_intersects(st_buffer(., 500), L_stations)))
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, L_stations)
+
+all_sales <- all_sales %>%
+  mutate(dist_Lstation = as.numeric(
+    st_distance(geometry, L_stations[nearest_idx, ], by_element = TRUE)))
+
+
+ggplot(all_sales, aes(x = dist_Lstation, y = sale_price)) + geom_point(alpha = 0.5)
+ggplot(all_sales, aes(x = dist_Lstation)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = L_500ft)) + geom_histogram(bins = 30) + theme_minimal()
+
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f2 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_Lstation
+f2.2 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + as.factor(L_500ft)
+
+m2 <- lm(f2, data = train_sales)
+summary(m2)
+
+m2.2 <- lm(f2.2, data = train_sales)
+summary(m2.2)
+
+train_sales <- train_sales |> 
+  mutate(resid_m2 = residuals(m2))
+
+train_sales <- train_sales |> 
+  mutate(resid_m2.2 = residuals(m2.2))
+
+mc2 <- moran.mc(train_sales$resid_m2, w_knn, nsim = 23199)
+mc2$statistic
+mc2$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m2", added = "Station distance",
+          cv_rmse = cv_rmse(f2, train_sales),
+          moran_i = mc2$statistic,
+          notes = "Proximity to L metro")
+
+
+mc2.2 <- moran.mc(train_sales$resid_m2.2, w_knn, nsim = 23199)
+mc2.2$statistic
+
+model_log <- model_log %>%
+  add_row(model = "m2.2", added = "Station 500 ft buffer",
+          cv_rmse = cv_rmse(f2.2, train_sales),
+          moran_i = mc2.2$statistic,
+          notes = "Proximity to L metro, v2")
+
+model_log
+```
+
+Adding proximity to L stations marginally improved the CV RMSE but not Moran's I. The 500 ft buffer was not as effective as distance to the closest station at predicting sale price.
+
+```{r}
+#| label: Model 3
+
+parks <- st_read("https://data.cityofchicago.org/resource/ejsh-fztr.geojson") |>
+  st_transform(st_crs(all_sales))
+
+ggplot(parks) + geom_sf() #just checking
+
+all_sales <- all_sales %>%
+  mutate(parks_500ft = lengths(st_intersects(st_buffer(., 500), parks)))
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, parks)
+
+all_sales <- all_sales %>%
+  mutate(dist_parks = as.numeric(
+    st_distance(geometry, parks[nearest_idx, ], by_element = TRUE)))
+
+
+ggplot(all_sales, aes(x = dist_parks, y = sale_price)) + geom_point(alpha = 0.5)
+ggplot(all_sales, aes(x = dist_parks)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = log1p(dist_parks))) + geom_histogram(bins = 30) + theme_minimal()
+#Don't think it's worth it to log the parks distance
+
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f3 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_parks
+
+m3 <- lm(f3, data = train_sales)
+summary(m3)
+
+train_sales <- train_sales |> 
+  mutate(resid_m3 = residuals(m3))
+
+mc3 <- moran.mc(train_sales$resid_m3, w_knn, nsim = 23199)
+mc3$statistic
+mc3$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m3", added = "Park distance",
+          cv_rmse = cv_rmse(f3, train_sales),
+          moran_i = mc3$statistic,
+          notes = "Proximity to parks")
+
+f3.2 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + as.factor(parks_500ft)
+m3.2 <- lm(f3.2, data = train_sales)
+summary(m3.2)
+
+train_sales <- train_sales |> 
+  mutate(resid_m3.2 = residuals(m3.2))
+
+mc3.2 <- moran.mc(train_sales$resid_m3.2, w_knn, nsim = 23199)
+mc3.2$statistic
+
+model_log <- model_log %>%
+  add_row(model = "m3.2", added = "Park 500 ft buffer",
+          cv_rmse = cv_rmse(f3.2, train_sales),
+          moran_i = mc3.2$statistic,
+          notes = "Proximity to parks, v2")
+
+model_log
+```
+
+Adding proximity to parks marginally improved the CV RMSE (compared to the baseline) but not Moran's I. Proximity to parks generally predicted worse than proximity to L stations, with respect to both CV RMSE and Moran's I. The 500 ft buffer was not as effective as distance to the closest park at predicting sale price.
+
+```{r}
+#| label: Model 4
+
+outdoor_seat <- st_read("https://data.cityofchicago.org/api/v3/views/qnjv-hj2q/query.geojson") |>
+  st_transform(st_crs(all_sales))
+
+ggplot(outdoor_seat) + geom_sf() #just checking
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, outdoor_seat)
+
+all_sales <- all_sales %>%
+  mutate(dist_cafe_seat = as.numeric(
+    st_distance(geometry, outdoor_seat[nearest_idx, ], by_element = TRUE)))
+
+
+ggplot(all_sales, aes(x = dist_cafe_seat, y = sale_price)) + geom_point(alpha = 0.5)
+ggplot(all_sales, aes(x = dist_cafe_seat)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = log1p(dist_cafe_seat))) + geom_histogram(bins = 30) + theme_minimal()
+
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f4 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_cafe_seat
+
+m4 <- lm(f4, data = train_sales)
+summary(m4)
+
+train_sales <- train_sales |> 
+  mutate(resid_m4 = residuals(m4))
+
+mc4 <- moran.mc(train_sales$resid_m4, w_knn, nsim = 23199)
+mc4$statistic
+
+model_log <- model_log %>%
+  add_row(model = "m4", added = "Proximity to outdoor seating",
+          cv_rmse = cv_rmse(f4, train_sales),
+          moran_i = mc4$statistic,
+          notes = "Outdoor cafe seating")
+
+model_log
+```
+
+```{r}
+waterways <- st_read("https://data.cityofchicago.org/api/v3/views/knfe-65pw/query.geojson") |>
+  st_transform(st_crs(all_sales))
+
+ggplot(waterways) + geom_sf() #just checking
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, waterways)
+
+all_sales <- all_sales %>%
+  mutate(dist_waterways = as.numeric(
+    st_distance(geometry, waterways[nearest_idx, ], by_element = TRUE)))
+
+ggplot(all_sales, aes(x = dist_waterways)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = log1p(dist_waterways))) + geom_histogram(bins = 30) + theme_minimal()
+
+
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f5 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_waterways
+
+m5 <- lm(f5, data = train_sales)
+summary(m5)
+
+train_sales <- train_sales |> 
+  mutate(resid_m5 = residuals(m5))
+
+mc5 <- moran.mc(train_sales$resid_m5, w_knn, nsim = 23199)
+mc5$statistic
+
+model_log <- model_log %>%
+  add_row(model = "m5", added = "Proximity to waterways",
+          cv_rmse = cv_rmse(f5, train_sales),
+          notes = "All waterways")
+
+model_log
+```
+```{r}
+lake_michigan <- waterways |>
+  subset(name == "LAKE MICHIGAN")
+
+ggplot(lake_michigan) + geom_sf() #just checking
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, lake_michigan)
+
+all_sales <- all_sales %>%
+  mutate(dist_lake = as.numeric(
+    st_distance(geometry, lake_michigan[nearest_idx, ], by_element = TRUE)))
+
+ggplot(all_sales, aes(x = dist_lake)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = log1p(dist_lake))) + geom_histogram(bins = 30) + theme_minimal()
+
+
+
+train_sales <- all_sales %>% filter(split == "train")
+
+f6 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_lake
+
+m6 <- lm(f6, data = train_sales)
+summary(m6)
+
+train_sales <- train_sales |> 
+  mutate(resid_m6 = residuals(m6))
+
+
+model_log <- model_log %>%
+  add_row(model = "m6", added = "Proximity to lake",
+          cv_rmse = cv_rmse(f6, train_sales),
+          notes = "Lake Michigan")
+
+model_log
+```
+
+```{r}
+train_sales <- all_sales %>% filter(split == "train")
+
+f7 <- sale_price ~ building_sf + building_age + I(building_age^2) + num_bedrooms + num_full_baths + dist_lake + dist_cafe_seat + dist_Lstation + dist_parks
+
+m7 <- lm(f7, data = train_sales)
+summary(m7)
+
+train_sales <- train_sales |> 
+  mutate(resid_m7 = residuals(m7))
+
+
+model_log <- model_log %>%
+  add_row(model = "m7", added = "Lake, cafe seat, L, parks",
+          cv_rmse = cv_rmse(f7, train_sales),
+          notes = "Combo basically")
+
+model_log
+```
+
+
+My model additions: proximity to metro/public transit, proximity to parks, proximity to lake, proximity to cafe seating 
+
+---
+
+## Part 3: Final model
+
+Show your final model, the model log, and baseline vs. final residual maps.
+
+```{r}
+#| label: part-3
+
+
+plot(residuals(m7))
+
+
+ggplot(train_sales) +
+  geom_sf(aes(fill = resid_m7), alpha = 0.7, size = 0.3) +
+  scale_fill_gradient2(low = "#2166ac", mid = "grey95", high = "#b2182b", midpoint = 0) +
+  theme_void() +
+  labs(title = "Baseline Model: Where it's Wrong",
+       subtitle = "Red = actual higher than predicted",
+       fill = "Residual")
+
+```
+
+**Answer:** What helped most, and what disappointed you? Use your log.
+
+*Your answer:*
+
+---
+
+## Part 4: Where it fails, and who pays
+
+**4A.** Where does your final model fail worst? Is it guessing too high or too low there, and why do you think so?
+
+**4B.** Assessors judge their work with the **ratio** of predicted value to sale price. A ratio above 1 means the home is over-valued and its owner over-taxed. Does your model's ratio differ by neighborhood income? Connect your answer to your Part 1 cleaning rules and to "The Tax Divide."
+
+```{r}
+#| label: part-4
+
+train_sales_extra <- train_sales |>
+  mutate(m1_pred = fitted.values(m1),
+         ratio = m1_pred/sale_price)
+
+train_sales_extra <- train_sales_extra |>
+  mutate(
+    ratio_cat = case_when(
+     ratio > 1 ~ "Over-valued",
+     ratio < 1 ~ "Under-valued"
+    ))
+  
+train_sales_extra %>% st_drop_geometry() %>% count(ratio_cat)
+
+plot(train_sales_extra$sale_price, train_sales_extra$ratio)
+
+ggplot(train_sales_extra, aes(sale_price, ratio)) + 
+  geom_point() +
+  xlim(0, 5000000)
+
+
+#table of:
+#25% lowest value  | under count | over count | ratio of under valued to over valued
+#25% highest value | under count | over count | ratio of under valued to over valued
+
+```
+
+*Your answers:*
+
+"The Tax Divide": lower-value homes were assessed at higher shares of their worth than expensive ones.
+
+
+There are less lower-value homes that are undervalued than more expensive ones. Our model corroborates the Tax Divide. We would not hand this over to an assessor; our model is not very accurate.
+
+
+
+---
+
+## Part 5: Predict the test houses (provided)
+
+Refit your final recipe on all training sales, then predict every test house. Set `f_final` to your final formula.
+
+```{r}
+#| label: predict-test
+m_final <- lm(f_final, data = st_drop_geometry(train))
+
+test <- all_sales %>% filter(split == "test")
+check_na(f_final, st_drop_geometry(test))       # fill NAs; never drop test rows
+
+preds <- tibble(id = test$id, pred = predict(m_final, st_drop_geometry(test)))
+
+stopifnot(nrow(preds) == nrow(test), all(is.finite(preds$pred)))
+write_csv(preds, "team_XX_predictions.csv")     # replace XX with your team number
+```
+
+**Final CV RMSE:** ___ . When your test RMSE comes back, you'll explain the gap on Q7.
+
+---
+
+## Part 6: Reflection (about 300 words, as a team)
+
+1. **Read one coefficient twice:** once as β̂, once for what it does to ŷ.
+2. **Would you hand this model to the Assessor?** What would you warn them about?
+
+*Your answer:*
+
+### Who did what
+
+| Name | Main contribution |
+|---|---|
+| | |
+
+### AI Team Statement
+What was your team's AI policy and how was AI used in this assignment? 

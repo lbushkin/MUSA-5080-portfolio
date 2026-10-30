@@ -1,0 +1,69 @@
+---
+title: "Week 8: More on Autocorrelation"
+description: "Introducing LISA"
+date: 2026-10-23
+---
+
+## What We Did
+
+Reviewed Moran's I and introduced LISA (i.e. local Moran's I).
+
+## Key Concepts
+
+More on Moran's I:
+
+- Moran's I is like standard deviation: how representative is the mean compared to the rest of the sample?
+- Reminder: close to 0 means no clustering, close to -1 or 1 means very clustered
+- Weight matrix ("w_ij"): different ways to operationalize who is a neighbor
+  - Queen vs Rook contiguity matrices for polygons 
+  - Rows in the weight matrix can be standardized (i.e. not always just 1s and 0s)
+- Limitations: it doesn't tell us /where/ the clusters are happening
+
+
+LISA:
+
+- Local Indicator of Spatial Association
+- Essentially a Moran's I for every observation
+  - I_i = z_i / m_2 * sum(w_ij * z_j)
+  - m_2 = sum(z_i^2) / n
+    - z_i = variation in each observation
+    - m_2 = standardization of the variation in each observation (average of all deviations from mean)
+- Note: unlike Global Moran's I, LISA can be bigger than |1| sometimes
+- Individual Moran's I values --> descriptive "quadrants"
+  - High-high: Observation and its neighbors are higher than the mean, therefore under-predicted; suggests missing spatial variable (amenity)
+  - High-low: Observation is greater than the mean, but neighbors are less, therefore there is something unusual about the individual observation
+  - Low-high: Observation is less than the mean, but the neighbors are higher, therefore there is something unsual about the individual observation
+  - Low-low: Observation and its neighbors are lower than the mean, therefore over-predicted; suggests missing spatial variable (dis-amenity)
+- Implications
+  - For tax assessments, an over-prediction means a property was over-taxed
+
+
+Calculating LISA in R:
+
+  - Create weight matrix with nb2listw() for nearest neighbors (not contiguity)
+
+LISA function:
+```{r}
+LISA_function <- function(resid, w, alpha = 0.01) {
+    lm_perm <- localmoran_perm(resid, w, nsim = 499) #perm means permutations
+    z <- resid - mean(resid)
+    lag <- lag.list(w,z)
+    p <- lm_perm[, "Pr(z != E(Ii)) Sim"]
+    case_when(
+      p >= alpha       ~ "Not significant",
+      z > 0 & lag > 0  ~ "High-High",
+      z < 0 & lag < 0  ~ "Low-Low",
+      z > 0 & lag < 0  ~ "High-Low",
+      TRUE             ~ "Low - High"
+    )
+}
+```
+  
+
+Determining Neighbors
+
+- Buffer count
+- K nearest neighbors (mean distance)
+- Single nearest feature
+
+

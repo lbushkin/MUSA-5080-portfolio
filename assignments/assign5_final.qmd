@@ -1,0 +1,1155 @@
+---
+title: "Assignment 5: House Price Prediction, Chicago"
+subtitle: "MUSA 5080 · Team assignment"
+author: "Team Red-Purple: Jonah, Luca, Rita, Ryska"
+date: last-modified
+format:
+  html:
+    toc: true
+    code-fold: show
+execute:
+  warning: false
+  message: false
+---
+
+### Background: The goal of our model:
+
+Chicago has long faced housing affordability challenges, and home prices vary considerably across the city’s neighborhoods. Understanding what drives these differences is essential to understanding the local housing market. In this project, we examine the factors influencing single-family home sale prices in Chicago from 2023 to 2025 and develop a predictive model to estimate prices for properties without recent sales. This model can help us explore how property characteristics, proximity to amenities, and location shape home values and provide insights into the challenges of equitable property assessment. We want to focus on the phenomena of "The Tax Divide," meaning whether lower-value homes were assessed at higher shares of their worth (and are over-taxed) than expensive one in Chicago.
+
+## Part 0: Setup (provided)
+
+These helpers are to help you get off the ground.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(tidycensus)
+library(sf)
+library(caret)
+library(spdep)
+library(nngeo)
+library(sf)
+library(dplyr)
+library(tidyr)
+library(httr)
+library(jsonlite)
+library(tigris)
+options(scipen = 999)
+```
+
+```{r}
+#| label: helpers
+check_na <- function(formula, df) {
+  vars <- all.vars(formula)
+  bad <- vars[sapply(vars, function(v) any(is.na(df[[v]])))]
+  if (length(bad) > 0) {
+    stop("These variables have NAs: ", paste(bad, collapse = ", "),
+         ". Fill them or choose another variable (Rule 1).")
+  }
+}
+
+
+cv_rmse <- function(formula, data) {
+  df <- if (inherits(data, "sf")) st_drop_geometry(data) else data
+  check_na(formula, df)
+  set.seed(5080)
+  fit <- train(formula, data = df, method = "lm",
+               trControl = trainControl(method = "cv", number = 10))
+  fit$results$RMSE
+}
+
+
+cv_pred <- function(formula, data) {
+  df <- if (inherits(data, "sf")) st_drop_geometry(data) else data
+  check_na(formula, df)
+  set.seed(5080)
+  fit <- train(formula, data = df, method = "lm",
+               trControl = trainControl(method = "cv", number = 10,
+                                        savePredictions = "final"))
+  fit$pred %>% arrange(rowIndex) %>% pull(pred)
+}
+
+
+socrata_get <- function(dataset, where, select = NULL, limit = 200000) {
+  where <- str_squish(where)
+  q <- paste0("$where=", URLencode(where, reserved = TRUE), "&$limit=", limit)
+  if (!is.null(select)) q <- paste0(q, "&$select=", URLencode(str_squish(select), reserved = TRUE))
+  url <- paste0("https://data.cityofchicago.org/resource/", dataset, ".geojson?", q)
+  tmp <- tempfile(fileext = ".geojson")
+  resp <- tryCatch(download.file(url, tmp, quiet = TRUE), error = function(e) e)
+  if (inherits(resp, "error")) stop("Portal request failed. Open this URL in a browser to see why:\n", url)
+  st_read(tmp, quiet = TRUE)
+}
+
+```
+
+
+### Load both files together (provided)
+
+We use EPSG:3435 (NAD83 / Illinois East) as the projected coordinate reference system for spatial analysis. The dataset provided for this assignment has already been divided into training and test sets, which we use for model development and prediction, respectively.
+
+```{r}
+#| label: load
+
+all_sales <- bind_rows(
+  read_csv("assignments/assignment5_files/chicago_train.csv", show_col_types = FALSE) %>% mutate(split = "train"),
+  read_csv("assignments/assignment5_files/chicago_test.csv",  show_col_types = FALSE) %>% mutate(split = "test")
+) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(3435)            # Illinois East State Plane, feet
+
+
+all_sales %>% st_drop_geometry() %>% count(split)
+
+```
+
+
+```{r}
+#| label: log-start
+model_log <- tibble(
+  model   = character(),
+  added   = character(),
+  cv_rmse = numeric(),
+  morans_i = numeric(),
+  moran_p  = numeric(),
+  notes   = character()
+)
+```
+Useful sources: the [Chicago Data Portal](https://data.cityofchicago.org) (find a dataset's ID under its API button), the Census via `tidycensus`, and Cook County's open data.
+
+---
+
+## Part 1: Clean and Explore
+
+We first examined the dataset, focusing on variables related to the physical characteristics of each house. To better understand how property characteristics differ across price levels, we divided homes into three categories based on sale price quartiles: low-priced homes (bottom 25%), medium-priced homes (middle 50%), and high-priced homes (top 25%).
+
+Our initial spatial analysis revealed a clear geographic pattern: low-priced homes are concentrated primarily in the South Side of Chicago, while high-priced homes are more prevalent in the northern part of the city, particularly near Lake Michigan. This pattern suggested that location may play an important role in determining home sale prices, motivating us to investigate tract level and neighborhood level factors in our predictive model.
+
+```{r}
+#| label: part-1
+summary(all_sales$sale_price)
+all_sales <- all_sales %>%
+  mutate(
+    price_category = cut(
+      sale_price,
+      breaks = c(0, 180000, 469000, Inf),
+      labels = c("low", "medium", "high")
+    )
+  )
+
+ggplot(all_sales) +
+  geom_sf(aes(color = price_category), alpha = 0.7, size = 0.2) +
+  theme_minimal()
+
+```
+We then examined the distributions of key housing characteristics to understand their relationships with sale prices.
+
+- Building size: Sale prices show a generally positive, linear relationship with building size (measured in thousands of square feet), with larger homes tending to sell for more.
+- Building age: The relationship appears nonlinear, with both newer and older buildings associated with higher sale prices.
+- Number of bedrooms: Bedroom counts are unevenly distributed across the dataset. We therefore considered re-categorizing this variable to better represent differences in housing types and improve model performance.
+```{r}
+
+ggplot(all_sales, aes(x = building_000sf, y = sale_price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "Sale Price vs. Building Size",
+    x = "Building Size (thousand sq ft)",
+    y = "Sale Price ($)"
+  ) +
+  theme_minimal()
+
+
+ggplot(all_sales, aes(x = building_age, y = sale_price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x + I(x^2),
+    se = TRUE,
+    color = "red"
+  ) +
+  labs(
+    title = "Sale Price vs. Building Age",
+    x = "Building Age (years)",
+    y = "Sale Price ($)"
+  ) +
+  theme_minimal()
+
+ggplot(all_sales, aes(x = building_age)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Building Age",
+    x = "Building Age (years)",
+    y = "Number of Sales"
+  ) +
+  theme_minimal()
+
+ggplot(all_sales, aes(x = factor(num_bedrooms))) +
+  geom_bar(fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Bedroom Numbers",
+    x = "Number of Bedrooms",
+    y = "Number of Sales"
+  ) +
+  theme_minimal()
+```
+
+
+---
+
+### Baseline Model
+
+For the base model, we used:
+
+- building square footage, 
+- lot size (measured in square feet), 
+- categorized number of bedrooms (with 1-2 bedrooms, 3 bedrooms, 4-5 bedrooms, and 6+ bedrooms)
+- building age, squared
+
+We used a box plot to check that  houses that have more bedrooms generally had a higher sale price.
+
+```{r}
+all_sales <- all_sales %>%
+  mutate(building_sf = building_000sf *1000,
+        lotsize_sqft = lotsize_acre * 53650)
+```
+
+
+```{r}
+
+all_sales <- all_sales %>%
+  mutate(
+    Cat_bedroom_num = case_when(
+      num_bedrooms <= 2 ~ "1-2 bedrooms",
+      num_bedrooms == 3 ~ "3 bedrooms",
+      num_bedrooms >= 4 & num_bedrooms <= 5 ~ "4-5 bedrooms",
+      num_bedrooms >= 6 ~ "6+ bedrooms",
+      TRUE ~ NA_character_
+    ),
+    Cat_bedroom_num = factor(
+      Cat_bedroom_num,
+      levels = c(
+        "1-2 bedrooms",
+        "3 bedrooms",
+        "4-5 bedrooms",
+        "6+ bedrooms"
+      )
+    )
+  )
+
+all_sales %>%
+  count(Cat_bedroom_num, .drop = FALSE, name = "num_houses")
+```
+
+```{r}
+#| label: categorical-look
+
+ggplot(all_sales, aes(x = Cat_bedroom_num, y = sale_price)) +
+  geom_boxplot() +
+  labs(
+    title = "House Sale Price by Number of Bedrooms",
+    x = "Number of Bedrooms",
+    y = "House Sale Price "
+  ) +
+  theme_minimal()
+
+ggplot(all_sales, aes(x = Cat_bedroom_num, y = sale_price)) +
+  geom_boxplot() +
+  scale_y_log10(labels = scales::label_dollar()) +
+  labs(
+    title = "House Sale Price by Number of Bedrooms",
+    x = "Number of Bedrooms",
+    y = "House Sale Price (log scale)"
+  ) +
+  theme_minimal()
+```
+
+
+```{r}
+#| label: m1
+train_set <- all_sales %>%
+  filter(split == "train")
+test_set <- all_sales %>%
+  filter(split == "test")
+
+f1 <- sale_price ~ I(building_age^2) + building_age + building_sf + Cat_bedroom_num
+
+m1 <- lm(f1, data = train_set)
+summary(m1)
+
+coords_train <- st_coordinates(train_set)
+w_knn <- nb2listw(knn2nb(knearneigh(coords_train, k = 5)), style = "W")
+
+
+train_set$resid_m1 <- residuals(m1)
+
+mc <- moran.mc(train_set$resid_m1, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m1", added = "Baseline",
+          cv_rmse = cv_rmse(f1, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "Squared building age, building square footage, and number of bedrooms.")
+
+model_log
+```
+
+The result of our baseline model shows that all variables that we used have a significant impact on our model.
+
+The CV-RMSE for the `r model_log$added[model_log$model == "m1"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m1"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m1"], 3)`.
+
+This suggests that nearby properties tend to have similar prediction errors, meaning the baseline model may not fully capture the spatial patterns underlying Chicago's housing market. 
+
+
+### Modified Baseline: added fireplace + lot size 
+
+We then expanded the baseline model by incorporating two additional housing characteristics: the number of fireplaces and lot size. 
+Lot sizes are concentrated within a relatively narrow range, so we applied a log transformation to capture their distribution better. 
+For fireplaces, the data includes a sufficient number of homes with one or more fireplaces, so we thought it important to add it to our model.
+
+```{r}
+all_sales <- all_sales %>%
+  filter(!is.na(lotsize_sqft),
+         !is.na(num_fireplaces)
+         # add !is.na() for each baseline predictor like in the in-class lab
+         )
+
+
+all_sales <- all_sales %>% 
+  mutate(log_lotsize_sqft = log1p(lotsize_sqft))
+
+
+ggplot(all_sales, aes(x = log_lotsize_sqft)) + geom_histogram(bins = 30) + theme_minimal()
+
+
+
+all_sales <- all_sales %>%
+  mutate(
+    Cat_fireplaces_num = case_when(
+      num_fireplaces < 1 ~ "0 fireplaces",
+      num_fireplaces == 1 ~ "1 fireplace",
+      num_fireplaces > 1 ~ "2+ fireplaces",
+      TRUE ~ NA_character_
+    ),
+    Cat_fireplaces_num = factor(
+      Cat_fireplaces_num,
+      levels = c(
+        "0 fireplaces",
+        "1 fireplace",
+        "2+ fireplaces"
+      )
+    )
+  )
+
+
+ggplot(all_sales, aes(x = factor(Cat_fireplaces_num))) +
+  geom_bar(fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Number of Fireplace",
+    x = "Number of Fireplaces",
+    y = "Number of Sales"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+#| label: Modified Baseline
+
+train_set <- all_sales %>%
+  filter(split == "train")
+
+f2 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft
+
+m2 <- lm(f2, data = train_set)
+summary(m2)
+
+coords_train <- st_coordinates(train_set)
+w_knn <- nb2listw(knn2nb(knearneigh(coords_train, k = 5)), style = "W")
+
+
+train_set$resid_m2 <- residuals(m2)
+
+mc <- moran.mc(train_set$resid_m2, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m2", added = "Transformed Baseline",
+          cv_rmse = cv_rmse(f2, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "transformed baseline")
+
+model_log
+
+```
+
+The result of our transformed baseline model shows that all variables we used have a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m2"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m2"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m2"], 3)`.
+Both indicators improved from the last model. 
+
+
+## Part 2: Spatial Variable Additions
+We then considered how spatial variables may help to better indicate the value of a house.
+
+### Distance to L
+Since the L is one of the public transit options that connects different parts of Chicago, we believed it was important to include the nearest distance to an L station in our model. We found that the further a home is from an L station, the lower the sale price. 
+Because it does not fully follow a linear trend, we found that logging the distance to the L station improved the model. 
+```{r}
+#| label: L_stations
+
+L_stations <- st_read("https://data.cityofchicago.org/resource/3tzw-cg4m.geojson") |>
+  st_transform(st_crs(all_sales))
+
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, L_stations)
+
+all_sales <- all_sales %>%
+  mutate(dist_Lstation = as.numeric(
+    st_distance(geometry, L_stations[nearest_idx, ], by_element = TRUE)))
+
+
+ggplot(all_sales, aes(x = dist_Lstation)) + geom_histogram(bins = 30) + theme_minimal()
+ggplot(all_sales, aes(x = log1p(dist_Lstation))) + geom_histogram(bins = 30) + theme_minimal()
+
+
+train_set <- all_sales %>% filter(split == "train")
+
+f3 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation)
+
+m3 <- lm(f3, data = train_set)
+summary(m3)
+
+train_set$resid_m3 <- residuals(m3)
+
+mc <- moran.mc(train_set$resid_m3, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+
+model_log <- model_log %>%
+  add_row(model = "m3", added = "Station distance",
+          cv_rmse = cv_rmse(f3, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "Proximity to L metro, logged")
+
+model_log
+```
+
+The result of our station distance model shows that all variables we used have a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m3"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m3"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m3"], 3)`.
+We see that while the CV_RMSE improved, the Moran's I increased slightly, suggesting that some spatial autocorrelation remains in the residuals. 
+
+
+### Outdoor seating
+
+We then added proximity to outdoor seating. We assumed that proximity to outdoor seating may affect housing prices because it reflects the types of businesses that are nearby.
+
+```{r}
+outdoor_seat <- st_read("https://data.cityofchicago.org/api/v3/views/qnjv-hj2q/query.geojson") |>
+  st_transform(st_crs(all_sales))
+
+
+nearest_idx <- st_nearest_feature(all_sales$geometry, outdoor_seat)
+
+all_sales <- all_sales %>%
+  mutate(dist_cafe_seat = as.numeric(
+    st_distance(geometry, outdoor_seat[nearest_idx, ], by_element = TRUE)))
+
+train_set <- all_sales %>% filter(split == "train")
+
+f4 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + dist_cafe_seat
+
+m4 <- lm(f4, data = train_set)
+summary(m4)
+
+train_set$resid_m4 <- residuals(m4)
+
+mc <- moran.mc(train_set$resid_m4, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+
+model_log <- model_log %>%
+  add_row(model = "m4", added = "Distance to outdoor seating",
+          cv_rmse = cv_rmse(f4, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ cafe seat")
+
+model_log
+
+```
+However, to our surprise, proximity to outdoor seating is not a significant predictor in our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m4"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m4"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m4"], 3)`.
+Both indicators worsened from the last model.
+
+### Bus stops
+
+Bus is another common type of public transit in Chicago, and we assumed that the closer to the bus stop, the better accessibility a household may have.
+
+Because the bus stops are dense and people may use different bus stop for different route, we calculate the average distance to 5 closest bus stops. 
+
+```{r}
+crs_projected <- 3435
+bus_stops <- st_read(
+  "https://data.cityofchicago.org/api/v3/views/qs84-j7wh/query.geojson?accessType=DOWNLOAD",
+  quiet = TRUE
+) %>%
+  st_transform(crs_projected) %>%
+  filter(!st_is_empty(geometry))
+
+all_sales <- all_sales %>%
+  st_transform(crs_projected)
+
+bus_knn <- st_nn(
+  all_sales,
+  bus_stops,
+  k = 5,
+  returnDist = TRUE,
+  progress = FALSE
+)
+
+all_sales$bus_knn5 <- sapply(
+  bus_knn$dist,
+  mean
+)
+
+train_set <- all_sales %>% filter(split == "train")
+
+f5 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + dist_cafe_seat + bus_knn5
+
+m5 <- lm(f5, data = train_set)
+summary(m5)
+
+train_set$resid_m5 <- residuals(m5)
+
+mc <- moran.mc(train_set$resid_m5, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m5", added = "Bus Stops",
+          cv_rmse = cv_rmse(f5, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ bus knn5")
+
+model_log
+```
+Like with outdoor seating, the average distance to the 5 closest bus stops is not a significant predictor in our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m5"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m5"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m5"], 3)`.
+As a result, we decided not to include the average distance to 5 closest bus stops in our following models.
+
+
+### Crime
+
+We also looked at the social risks surrounding a house. Crime is an important indicator. We thought that all types of crime reduce the perception of safety in an area. Therefore, we decided to include all crimes in 2022-2023.
+We selected all the crime data from 2022 to 2023 and counted how many of them happened within 500 feet of a house.
+
+```{r}
+
+crime_2022 <- read.csv("assignments/assignment5_files/crime_2022.csv")
+
+crime_2022 <- crime_2022 %>%
+  mutate(
+    latitude = as.numeric(latitude),
+    longitude = as.numeric(longitude)
+  ) %>%
+  filter(
+    !is.na(latitude),
+    !is.na(longitude)
+  )
+
+crime_sf <- st_as_sf(
+  crime_2022,
+  coords = c("longitude", "latitude"),
+  crs = 4326
+)
+
+crs_projected <- 3435
+
+crime_sf <- st_transform(crime_sf, crs_projected)
+
+
+sales_buffer <- st_buffer(all_sales, 500)
+
+crime_hits <- st_intersects(sales_buffer, crime_sf)
+
+all_sales <- all_sales |>
+  mutate(crime_count_500feet = lengths(crime_hits))
+
+summary(all_sales$crime_count_500feet)
+
+train_set <- all_sales %>% filter(split == "train")
+
+f6 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) +  crime_count_500feet
+
+m6 <- lm(f6, data = train_set)
+summary(m6)
+
+train_set$resid_m6 <- residuals(m6)
+
+mc <- moran.mc(train_set$resid_m6, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m6", added = "Crime",
+          cv_rmse = cv_rmse(f6, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ crime")
+
+model_log
+```
+
+The result of our crime model shows that it may have a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m6"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m6"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m6"], 3)`.
+Although RMSE did not improve from the last model, Moran's I did.
+
+
+### Median income
+
+The characteristics of the surrounding neighborhood may also influence home sale prices. To capture this neighborhood-level effect, we first incorporated the median household income of the census tract in which each property was located. 
+
+```{r}
+#| output: false
+#| message: false
+#| warning: false
+
+tract_income <- get_acs(
+  geography = "tract",
+  variables = c(neighborhood_income = "B19013_001"),
+  state = "IL",
+  county = "Cook",
+  year = 2022,
+  survey = "acs5",
+  geometry = TRUE
+)
+tract_income <- tract_income %>%
+  select(GEOID, NAME, neighborhood_income = estimate, geometry)
+
+tract_income <- st_transform(tract_income, crs_projected)
+
+income_join <- st_join(
+  all_sales,
+  tract_income %>%
+    select(neighborhood_income),
+  join = st_within,
+  left = TRUE
+)
+
+all_sales$neighborhood_income <- income_join$neighborhood_income
+
+model_data <- median(all_sales$neighborhood_income[all_sales$split == "train"], na.rm = TRUE)
+                     
+all_sales <- all_sales %>% mutate(neighborhood_income = replace_na(neighborhood_income, model_data))
+
+
+train_set <- all_sales %>% filter(split == "train")
+
+f7 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + crime_count_500feet + neighborhood_income
+
+m7 <- lm(f7, data = train_set)
+summary(m7)
+
+train_set$resid_m7 <- residuals(m7)
+
+mc <- moran.mc(train_set$resid_m7, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m7", added = "Income",
+          cv_rmse = cv_rmse(f7, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ tract income")
+
+model_log
+```
+The result of our tract level medium household income model shows that it has a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m7"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m7"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m7"], 3)`.
+Both indicators improved from the last model.
+
+### Education and Elderly
+
+We assumed some neighborhood demographic information may impact house value. We looked at whether the educational attainment of the population and the percentage of elderly people impacted house price. We assumed that a higher share of people with Bachelor's degrees, as well as a higher share of elderly in a tract's population could make a given house more valuable.
+
+```{r}
+#| label: Demographic Variables
+#| output: false
+#| message: false
+#| warning: false
+
+vars <- load_variables(2022, "acs5")
+
+chicago_tracts <- get_acs(
+  geography = "tract",
+  state = "IL",
+  county = "Cook",
+  variables = c(                 # universe #
+    total_pop = "B01003_001",    # people
+    totalHH = "B08201_001",      # households
+    #medinc = "B07011_001",       # people
+    under18 = "C18108_002",      # people
+    adult_18_64 = "C18108_006",  # people
+    over65 = "C18108_010",      # people
+    edu_total  = "B15003_001",   # people >25yrs
+    ba         = "B15003_022",   # people >25yrs
+    ma         = "B15003_023",   # people >25yrs
+    prof       = "B15003_024",   # people >25yrs
+    phd        = "B15003_025"    # people >25yrs
+  ),
+    year = 2022,
+  output = "wide",
+  geometry = TRUE
+) %>%
+  st_transform(3435)
+
+#Transform
+chicago_tracts <- chicago_tracts %>%
+  mutate(
+    pct_18to64 = adult_18_64E / total_popE * 100,
+    pct_under18 = under18E / total_popE * 100,
+    pct_over64 = over65E / total_popE * 100,
+    pct_ba     = (baE + maE + profE + phdE) / edu_totalE * 100
+    ) %>%
+  mutate(pct_over64 = replace_na(pct_over64, 0),
+         pct_ba     = replace_na(pct_ba, 0))
+
+
+#Spatially Join Demographic Data
+all_sales <- st_join(
+  all_sales,
+  chicago_tracts,
+  join = st_within,
+  left = TRUE
+) 
+
+#Replace NAs
+over64_NA <- median(all_sales$pct_over64[all_sales$split == "train"], na.rm = TRUE)
+                     
+all_sales <- all_sales %>% mutate(pct_over64 = replace_na(pct_over64, over64_NA))
+
+BA_NA <- median(all_sales$pct_ba[all_sales$split == "train"], na.rm = TRUE)
+                     
+all_sales <- all_sales %>% mutate(pct_ba = replace_na(pct_ba, BA_NA))
+
+ggplot(all_sales, aes(x = pct_ba, y = sale_price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x + I(x^2),
+    se = TRUE,
+    color = "red"
+  ) +
+  labs(
+    title = "Sale Price vs. Percentage of BA",
+    x = "Bachelors Degree (%)",
+    y = "Sale Price ($)"
+  ) +
+  theme_minimal()
+
+train_set <- all_sales %>% filter(split == "train")
+
+f8 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + crime_count_500feet + neighborhood_income + pct_over64 + pct_ba + I(pct_ba^2)
+
+m8 <- lm(f8, data = train_set)
+summary(m8)
+
+train_set$resid_m8 <- residuals(m8)
+
+mc <- moran.mc(train_set$resid_m8, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+
+model_log <- model_log %>%
+  add_row(model = "m8", added = "Demographics",
+          cv_rmse = cv_rmse(f8, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ Higher edu, elderly")
+
+model_log
+  
+```
+
+The result of our education and elderly variable additions shows that they have a significant impact on our model. We squared the share of the population that has a bachelor's degree because of the curved distribution.
+The CV-RMSE for the `r model_log$added[model_log$model == "m8"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m8"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m8"], 3)`.
+Both indicators improved from the last model.
+
+### Grocery
+
+We also wanted to look at the impact of amenities. Instead of looking at all possible amenities, we decided to only look at groceries, as that is an amenity that people need to use on a very regular basis. We assumed that the more open grocery stores near the a house, the more convenient the house location was, and therefore the more valuable the property.
+
+```{r}
+grocery <- st_read(
+  "https://data.cityofchicago.org/api/v3/views/3e26-zek2/query.geojson",
+  quiet = TRUE
+) %>%
+  st_transform(crs_projected) %>%
+  filter(!st_is_empty(geometry))
+
+grocery <- grocery %>%
+  filter(new_status == "OPEN")
+nearest_idx_G <- st_nearest_feature(all_sales$geometry, grocery)
+
+all_sales <- all_sales %>%
+  mutate(dist_grocery = as.numeric(
+    st_distance(geometry, grocery[nearest_idx_G , ], by_element = TRUE)))
+
+train_set <- all_sales %>% filter(split == "train")
+
+f9 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + crime_count_500feet + neighborhood_income + pct_over64 + pct_ba + I(pct_ba^2) + dist_grocery
+
+m9 <- lm(f9, data = train_set)
+summary(m9)
+
+train_set$resid_m9 <- residuals(m9)
+
+mc <- moran.mc(train_set$resid_m9, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+
+model_log <- model_log %>%
+  add_row(model = "m9", added = "Grocery",
+          cv_rmse = cv_rmse(f9, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ Grocery")
+
+model_log
+```
+The result of our grocery model shows that all variables we used have a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m9"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m9"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m9"], 3)`.
+Both indicator improved from the last model.
+
+
+### Distance to CBD
+
+Downtown Chicago has many shopping and dining locations, and it attracted many visitors. We wanted to check whether the distance to the CBD area affected housing price also.
+
+```{r}
+cbd <- st_read("https://data.cityofchicago.org/api/v3/views/fe34-kcci/query.geojson?accessType=DOWNLOAD") %>%
+  st_as_sf(wkt = "the_geom", crs = 4326) %>%
+  st_transform(3435)            # Illinois East State Plane, feet
+
+cbd_pt <- st_centroid(st_geometry(cbd))
+
+all_sales <- all_sales %>%
+  mutate(dist_cbd = as.numeric(st_distance(st_geometry(.), cbd_pt)))
+
+train_set <- all_sales %>% filter(split == "train")
+
+f10 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + log1p(dist_Lstation) + crime_count_500feet + neighborhood_income + pct_over64 + pct_ba + I(pct_ba^2) + dist_grocery + dist_cbd 
+
+m10 <- lm(f10, data = train_set)
+summary(m10)
+
+train_set$resid_m10 <- residuals(m10)
+
+mc <- moran.mc(train_set$resid_m10, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m10", added = "Distance to CBD",
+          cv_rmse = cv_rmse(f10, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = "+ Distance to CBD")
+
+model_log
+```
+
+Our CBD model shows that with the distance to the CBD, the distance to grocery stores and distant to the L line are no longer significant factors for the prediction. It is surprising that the coefficient is positive; this means that the further away from the L, the higher the house price (if only slightly). We therefore got rid of the grocery and distance to L line variable.
+
+The CV-RMSE for the `r model_log$added[model_log$model == "m10"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m10"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m10"], 3)`.
+
+
+### Community
+
+Our last variable is a fixed effect that accounts for differences between neighborhoods that cannot be explicitly identified. These differences may include unjustifiable factors like social infrastructure, kinship, and community identity. It may also include the sanitary condition, vacancy, greenery, or other physical factors.
+
+```{r}
+community <- st_read(
+  "https://data.cityofchicago.org/resource/y6yq-dbs2.geojson"
+)
+community <- st_transform(community, crs_projected)
+
+
+sales_community <- st_join(
+  all_sales,
+  community,
+  join = st_within,
+  left = TRUE
+)
+
+all_sales$community <- sales_community$pri_neigh
+
+all_sales$community[all_sales$community == "Boystown"] <- "Unknown"
+
+all_sales$community <- factor(replace_na(as.character(all_sales$community), "Unknown"))
+
+
+all_sales %>%
+  st_drop_geometry() %>%
+  group_by(community) %>%
+  summarise(n = n())
+
+train_set <- all_sales %>% filter(split == "train")
+
+f11 <- sale_price ~ I(building_age^2) + building_age + Cat_bedroom_num + Cat_fireplaces_num + building_sf + log_lotsize_sqft + crime_count_500feet + neighborhood_income + pct_over64 + pct_ba + I(pct_ba^2)  + dist_cbd + community
+
+m11 <- lm(f11, data = train_set)
+summary(m11)
+
+train_set$resid_m11 <- residuals(m11)
+
+mc <- moran.mc(train_set$resid_m11, w_knn, nsim = 499)
+mc$statistic
+mc$p.value
+
+model_log <- model_log %>%
+  add_row(model = "m11", added = "+ Community",
+          cv_rmse = cv_rmse(f11, train_set),
+          morans_i = mc$statistic,
+          moran_p = mc$p.value,
+          notes = " + Community")
+
+model_log
+```
+
+The result of our community model shows that all variables we used have a significant impact on our model.
+The CV-RMSE for the `r model_log$added[model_log$model == "m11"]` model is $`r format(round(model_log$cv_rmse[model_log$model == "m11"], 0), big.mark = ",")`, and Moran's I is `r round(model_log$morans_i[model_log$model == "m11"], 3)`.
+
+This will therefore be our final model.
+
+
+## Part 3: Final model
+
+#### Building character:
+
+- Building size has a strong positive association with sale price: each additional square foot is associated with an estimated $316 increase in price. 
+- Lot size is also positively associated with sale price. 
+- Building age has a nonlinear relationship with price, as indicated by the positive squared-age coefficient and negative linear-age coefficient. 
+- Bedroom count also matters: compared with the house that have 1-2 bedroom, homes with 3 bedrooms and 4–5 bedrooms have lower estimated prices, while homes with 6 or more bedrooms have higher estimated prices. 
+
+
+#### Spatial  character:
+
+ - Distance to the CBD has a significant negative coefficient, suggesting that homes farther from downtown tend to have lower prices. 
+ - Distance to outdoor seating also has a negative association with sale price, although the estimated effect is relatively small per unit of distance. 
+ - Crime counts within 500 feet are negatively associated with home prices. 
+
+### Neighborhood socioeconomic characteristics:'
+
+- The percentage of residents with a bachelor's degree has a nonlinear relationship with sale price: the linear coefficient is negative and the squared term is positive. This may reflect the fact that an area with a very high share of residents with a Bachelor's degree may be areas where there are lots of graduate students, and therefore cannot afford to live in expensive housing.
+- Median neighborhood income and the percentage of residents aged over 64 are not statistically significant in this model. This may be because the community fixed effect accounts for these variables.
+
+### Community-level differences: 
+
+- Many community fixed-effect coefficients are statistically significant. For example, Lincoln Park, Gold Coast, and Old Town have large positive coefficients relative to the omitted reference community, while several South and West Side communities have negative coefficients. 
+
+```{r}
+model_log_final <- model_log  %>%
+  distinct(model, .keep_all = TRUE) %>%
+  arrange(as.integer(gsub("m", "", model)))
+
+model_log_final
+```
+
+
+## Part 4: Where it fails, and who pays
+
+### Residual Map: where do we over predict?
+```{r}
+m11 <- lm(
+  f11,
+  data = st_drop_geometry(train_set),
+  na.action = na.fail
+)
+m1 <- lm(
+  f1,
+  data = st_drop_geometry(train_set),
+  na.action = na.fail
+)
+
+train_set <- train_set %>% mutate(resid_final = residuals(m11))
+train_set <- train_set %>% mutate(resid_baseline = residuals(m1))
+
+P_baseline <- ggplot(train_set) +
+  geom_sf(aes(color = resid_baseline), alpha = 0.7, size = 0.2) +
+  scale_color_gradient2(
+    low = "#2166ac",
+    mid = "grey95",
+    high = "#b2182b",
+    midpoint = 0,
+    limits = c(-50, 50),
+    oob = scales::squish
+  )  +
+  labs(
+    title = "Baseline Model: Where It's Wrong",
+    subtitle = "Red = actual higher than predicted; blue = actual lower than predicted",
+    fill = "Residual"
+  )
+
+p_final <- ggplot(train_set) +
+  geom_sf(aes(color = resid_final), alpha = 0.7, size = 0.2) +
+  scale_color_gradient2(
+    low = "#2166ac",
+    mid = "grey95",
+    high = "#b2182b",
+    midpoint = 0,
+    limits = c(-50, 50),
+    oob = scales::squish
+  )  +
+  labs(
+    title = "Final Model: Where It's Wrong",
+    subtitle = "Red = actual higher than predicted; blue = actual lower than predicted",
+    fill = "Residual"
+  )
+
+P_baseline
+p_final
+```
+
+Compared with the baseline model, which tends to underpredict home prices on the North Side and over predict them on the South Side, the final model exhibits weaker spatial autocorrelation in its residuals. No clearly defined area is consistently experiencing over prediction. 
+
+### The Tax Divide
+
+Although the residual map does not reveal a clear spatial pattern, we further examined whether prediction errors were associated with sale prices (low v. high prices). Specifically, we investigated whether lower-priced homes were more likely to be over-predicted, which could explain a systematic bias of the model. Assessors judge their work with the ratio of predicted value to sale price, so our analysis included this ratio to help answer this point.
+
+```{r}
+train_sales_extra <- train_set|>
+  mutate(m_final_pred = fitted.values(m11),
+         ratio = m_final_pred/sale_price)
+
+train_sales_extra <- train_sales_extra |>
+  mutate(
+    ratio_cat = case_when(
+     ratio > 1 ~ "Over-valued",
+     ratio < 1 ~ "Under-valued"
+    ))
+
+p_over_under_price <- ggplot(train_sales_extra) +
+  geom_sf(aes(color = ratio_cat), alpha = 0.7, size = 0.2) +
+  labs(
+    title = "Final Model: Where It's Wrong",
+    fill = "Residual"
+  )
+
+p_over_under_price
+```
+
+
+```{r}
+train_sales_extra  <-  train_sales_extra %>%
+  mutate(
+    price_category = cut(
+      sale_price,
+      breaks = c(0, 180000, 469000, Inf),
+      labels = c("low", "medium", "high")
+    )
+  )
+
+
+low_price <- train_sales_extra %>%
+  filter(price_category == "low") %>%
+  count(ratio_cat)
+
+high_price <- train_sales_extra %>%
+  filter(price_category == "high") %>%
+  count(ratio_cat)
+
+
+price_ratio_table <- train_sales_extra %>%
+  st_drop_geometry() %>%
+  filter(price_category %in% c("low", "high")) %>%
+  count(price_category, ratio_cat) %>%
+  pivot_wider(
+    names_from = ratio_cat,
+    values_from = n,
+    values_fill = 0
+  )
+
+price_ratio_table <- price_ratio_table %>%
+  mutate(ratio = `Under-valued`/`Over-valued`)
+price_ratio_table
+```
+
+We divided the low / medium / high split in the same way as we did in the beginning of the assignment. We found out that lower-priced homes are indeed more likely to be over-valued, and therefore, over-taxed. 
+
+
+## Part 5: Predict the test houses (provided)
+
+Refit your final recipe on all training sales, then predict every test house. Set `f_final` to your final formula.
+
+```{r}
+#| label: predict-test
+m_final <- lm(f11, data = st_drop_geometry(train_set))
+
+test <- all_sales %>% filter(split == "test")
+#check_na(f11, st_drop_geometry(test_common))       # fill NAs; never drop test rows
+
+preds <- tibble(id = test$id, pred = predict(m11, st_drop_geometry(test)))
+sum(!is.finite(preds$pred))
+preds %>%
+  filter(!is.finite(pred))
+
+#test %>%
+#  filter(id == 6574) %>%
+#  st_drop_geometry() %>%
+#  select(all_of(all.vars(formula(m11))[-1])) %>%
+#  glimpse()
+
+stopifnot(nrow(preds) == nrow(test), all(is.finite(preds$pred)))
+write_csv(preds, "team_red-purple_predictions.csv")     # replace XX with your team number
+```
+
+**Final CV RMSE:** 
+\$`r format(round(model_log$cv_rmse[model_log$model == "m11"], 0), big.mark = ",")`
+
+
+## Part 6: Reflection 
+
+1. **Read one coefficient twice:** once as β̂, once for what it does to ŷ.
+
+In our final model, the coefficient for the share of people over 64 is 141.9078 (β). Therefore for every 1% increase in the share of elderly people in a census tract, there is a $141.91 increase in predicted sale price of a home, holding all other variables constant.
+
+
+2. **Would you hand this model to the Assessor?** What would you warn them about?
+
+Our model's findings are consistent with the Chicago Tribune's investigation, which found that lower-value homes were assessed at a higher proportion of their actual value than more expensive homes. In our analysis, lower-value homes had an under/overvaluation ratio of `r round(price_ratio_table$ratio[price_ratio_table$price_category == "low"], 3)`, compared with `r round(price_ratio_table$ratio[price_ratio_table$price_category == "high"], 3)` for higher-value homes. Nevertheless, we do not recommend that the Cook County Assessor adopt this model for property assessment, as further validation and evaluation of its potential biases are needed.
+
+First, our final model is still off by $273,157.80. This is an immense range and can skew future assessments to either over- or under-value a home in drastically incorrect ways.
+
+Second, while our final model does seem to address issues of spatial autocorrelation from our baseline model, it over-fixes by now under-valuing a much larger share of homes.
+
+Third, these are both indications that we are "missing something" -- either demographic, spatial, or some other metric -- that would help better explain sale price. On the other hand, we may have included features that though they contributed to the overall RMSE, they may not actually be useful variables going forward. For example, distance to groceries did not lower the RMSE so much and so may not be worth including in future models.
+
+Finally, while a tax assessment model may help people lower their taxes, if it is an open source government model, it could be used by for-profit real estate companies to "game the market" in order to aquire under-taxed homes. There is no such thing as no-strings-attached in the real estate market.
+
+
+### Who did what
+
+| Name | Main contribution                                                                                         |
+|Luca  | Looked at some variables independently and contributed to the final model; reviewed file before submission|
+|Jonah | Looked at some variables independently and contributed to the final model; added some reflection text     |
+|Rita  | Looked at some variables independently and contributed to the final model; created main file              |
+|Ryska | Looked at some variables independently and contributed to the final model; reviewed file before submission|
+
+
+### AI Team Statement
+What was your team's AI policy and how was AI used in this assignment? '
+
+We used AI for coding questions but did not really utilize AI coding in our assignment.
