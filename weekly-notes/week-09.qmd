@@ -14,10 +14,12 @@ Introducing Poisson
 
 - Used for non-linear relationships, specifically right-skew distribution with a lower bound of zero
 - Coefficient is the multiplicative change in expected count per one-unit change in x
-  - Ex: 
+  - Ex: Each one-unit increase in x means 22% more expected burglaries
 - Poisson models assume that the variance = mean
   - If the variance is much bigger than the mean: "overdispersion"
   - I.e. if data is "really" skewed, might need to use a negative binomial model instead
+- Code: glm(model, family = "poisson", data = "dataset")
+  - To see predictions per observation: mutate(pred_poisson = predict(poisson, type = "response")) 
 
 Predictive Policing
 
@@ -31,52 +33,20 @@ Predictive Policing
 - Broken windows theory: lack of maintenance can reflect precursor for criminal behavior
   - No longer accepted, because it punishes individuals for perceived disorderly behavior
   - I.e. profiling
-- 
+
 
 
 Example of a predictive policing model: burglaries in Philadelphia
 
-```{r}
-library(tidyverse)
-library(tidycensus)
-library(sf)
-library(caret)
-library(spdep)
-library(nngeo)
-library(sf)
-library(dplyr)
-library(tidyr)
-library(httr)
-library(jsonlite)
-library(tigris)
-options(scipen = 999)
-
-burg_sql <- function(year) {
-  paste0("SELECT the_geom, dispatch_date, text_general_code
-          FROM incidents_part1_part2
-          WHERE text_general_code = 'Burglary Residential'
-          AND dispatch_date >= '", year, "-01-01'
-          AND dispatch_date <  '", year + 1, "-01-01'
-          AND the_geom IS NOT NULL")
-}
-
-burg_2024 <- carto_get(burg_sql(2024)) |> 
-  st_transform(2272)  # features
-burg_2025 <- carto_get(burg_sql(2025)) |>
-  st_transform(2272)  # outcome
-
-philly <- counties("PA", cb = TRUE, progress_bar = FALSE) %>%
-  filter(NAME == "Philadelphia") %>%
-  st_transform(2272)
-
-c(burg_2024 = nrow(burg_2024), burg_2025 = nrow(burg_2025))
-
-ggplot() +
-  geom_sf(data = philly, fill = "grey95", color = "grey60") +
-  geom_sf(data = burg_2025, size = 0.2, alpha = 0.4, color = "darkred") +
-  labs(title = "Residential burglaries, 2025") +
-  theme_void()
+- Using 2024 data to predict 2025 burglaries
+- Will divide Philadelphia into 500 sq ft cells (relatively high resolution)
+  - Code: st_make_grid(philly, cellsize = 500, square = TRUE)
+- Possible variables: street lighting, graffiti, 311 calls, litter score, proximity to police stations
 
 
-```
+Model Evolutions 
 
+- Kernel density map: smoothing out points to create a map of hot spots, essentially
+- Risk terrain: uses logistic regression
+- ML: uses random forest and neural nets
+- Person based: uses network analysis 
