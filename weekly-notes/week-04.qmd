@@ -10,7 +10,7 @@ Went over projections and basic functions for working with and mapping spatial d
 
 ## Key Concepts
 
-Overview of Geography & Coordinate Reference Systems
+#### Overview of Geography & Coordinate Reference Systems
 
 - Geographic: latitude and longitude, measured in degrees
   - Geographers draw different ellipsoids to fit different areas of the Earth better
@@ -26,7 +26,7 @@ Overview of Geography & Coordinate Reference Systems
 - Projection for Philadelphia: PA southern state plane (2272)
   
 
-Spatial features (Sf) and relevant commands in R:
+#### Spatial features (Sf) and relevant commands in R:
 
 - st_crs(your data) to view crs of your data
 - st_set_crs() to add correct label (if missing)

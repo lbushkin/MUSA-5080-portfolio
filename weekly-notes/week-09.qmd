@@ -10,7 +10,7 @@ Learned about Poisson models and how they relate to predictive policing models.
 
 ## Key Concepts
 
-Introducing Poisson 
+#### Introducing Poisson 
 
 - Used for non-linear relationships, specifically right-skew distribution with a lower bound of zero
 - Coefficient is the multiplicative change in expected count per one-unit change in x
@@ -21,7 +21,7 @@ Introducing Poisson
 - Code: glm(model, family = "poisson", data = "dataset")
   - To see predictions per observation: mutate(pred_poisson = predict(poisson, type = "response")) 
 
-Predictive Policing
+#### Predictive Policing
 
 - The original idea was to take human bias out of police decision-making, arguing that it would be "more objective"
   - Could be place-based (i.e. certain neighborhoods) or person-based (i.e. identifying "risky" individuals)
@@ -44,7 +44,7 @@ Example of a predictive policing model: burglaries in Philadelphia
 - Possible variables: street lighting, graffiti, 311 calls, litter score, proximity to police stations
 
 
-Model Evolutions 
+#### Model Evolutions 
 
 - Kernel density map: smoothing out points to create a map of hot spots, essentially
 - Risk terrain: uses logistic regression

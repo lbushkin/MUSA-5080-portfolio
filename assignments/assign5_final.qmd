@@ -1156,6 +1156,7 @@ Finally, while a tax assessment model may help people lower their taxes, if it i
 ### Who did what
 
 | Name | Main contribution|
+| --- | ---: |
 |Luca  | Looked at some variables independently and contributed to the final model; reviewed file before submission|
 |Jonah | Looked at some variables independently and contributed to the final model; added some reflection text     |
 |Rita  | Looked at some variables independently and contributed to the final model; created main file              |

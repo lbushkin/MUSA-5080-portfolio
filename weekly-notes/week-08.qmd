@@ -10,7 +10,7 @@ Reviewed Moran's I and introduced LISA (i.e. local Moran's I).
 
 ## Key Concepts
 
-More on Moran's I:
+#### More on Moran's I:
 
 - Moran's I is like standard deviation: how representative is the mean compared to the rest of the sample?
 - Reminder: close to 0 means no clustering, close to -1 or 1 means very clustered
@@ -20,7 +20,7 @@ More on Moran's I:
 - Limitations: it doesn't tell us /where/ the clusters are happening
 
 
-LISA:
+#### LISA:
 
 - Local Indicator of Spatial Association
 - Essentially a Moran's I for every observation
@@ -38,7 +38,7 @@ LISA:
   - For tax assessments, an over-prediction means a property was over-taxed
 
 
-Calculating LISA in R:
+#### Calculating LISA in R:
 
   - Create weight matrix with nb2listw() for nearest neighbors (not contiguity)
 

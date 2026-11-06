@@ -1,0 +1,106 @@
+---
+title: "Week 10: Predictions Using Logistic Regression"
+description: "Logistic Regression and Predicting Recidivism"
+date: 2026-11-06
+---
+
+## What We Did
+
+Reviewed Poisson models and introduced logistic regression, using recidivism as a case study.
+
+## Key Concepts
+
+
+#### Odds vs Probability
+
+- Probability: percent chance of happening
+- Odds: P/(1-P)
+  - "How many more times is a specific outcome likely to happen again"
+- Ex: If probability = 80%, then the odds = 4
+- Ex: If probability = 50%, then the odds = 1 (i.e. even odds)
+- Ex: If probability = 45%, then the odds = 0.835
+  - Could be interpreted as: For every 100 people not sick with the flu, 84 are 
+- Convert probability into log-odds to be able to use GLM
+- Interpretation: Log-odds > 0 means odds > 1, which means probability > 50% (i.e. more likely than not)
+  - (Odds − 1) × 100 = percent change in the odds
+  - If log-odds are 0.16, then the odds are 1.17, which means that the odds increased by 17%
+  
+
+|Probability| Odds | Log-Odds |
+| --- | :---: | ---: |
+| 0.01| 0.01  | -4.6 |
+| 0.10| 0.11  | -2.2 |
+| 0.50| 1     | 0    |
+| 0.80| 4     | 1.4  |
+| 0.90| 9     | 2.2  |
+| 0.99| 99    | 4.6  |
+| 0-1 | 0 - ∞ | -∞ - +∞| 
+
+*Log-odds in this case is natural log
+
+
+#### Generalized Linear Modeling (GLM)
+
+- Using a linear combination of variables
+- Applies to both Poisson and logistic regression
+- Link (g): maps outcome to predictors without breaking the boundary rules
+- Inverse Link (g^-1): maps predictors to the outcome; turns a mathematical score into "real-world" prediction
+
+|Model| Random Component | Bounded Expected Values | Link Function | Inverse Link |
+| --- | :---: | :---: | :---: | ---: |
+| Logistic | Binomial | Probability P(0,1) | Logit Link ln(P/(P-1)) | g^-1 |
+| Poisson  | Poisson  | (0, infinity)  | Log Link log(mu)  | Sigmoid Function (e^n) / (1+e^n) |
+
+*Sigmoid = "S-curve"
+
+#### Probability (P): P = (e^z)/(1 + e^z) where z = B_0 + B_1 x_1 + ...
+
+- If z > 0, then p > 50% 
+- If z < 0, then p < 50%
+- If z = 0, then there is exactly 50% risk
+
+
+#### Criminal Risk Assessment Algorithms
+
+- Ex: COMPAS 
+  - Uses 137 question survey as input data
+  - Takes into account criminal history, history of violence, family history, mental health and personality traits, attitudes about the legal system
+- U.S. Supreme Court failed to hear case about use of COMPAS in determining a person's sentencing
+- Researchers have found that COMPAS was about as accurate as very simple or random predictive models
+- COMPAS has since updated their model
+
+
+#### Geographic Cross-Validation
+
+- K-fold cross-validation imperfect for spatial data
+  - Spatial autocorrelation causes spatial leakage (which makes the model seem like it's performing better than it actually does)
+- In the case of using a fishnet grid as the spatial units, better to divvy up the cells into districts rather than use random k-folds
+
+
+#### Logistic Regression
+
+- For predicting binary outcomes (yes/no, etc.)
+- Model: log(P/(1-P)) = B0 + B1x1 + B2x2 + ...
+- Code: glm(y ~ x, family = binomial, data = dataset)
+- Choose a threshold probability to determine what counts as "yes" and what counts as "no"
+  - Ex: all probabilities over 50% are coded as "yes"
+
+|Prediction| Actual 1 | Actual 0 |
+| --- | :---: | ---: |
+| 1| True Positive  | False Positive |
+| 0| False Negative | True Negative  |
+
+False positives and false negatives are inversely correlated (when one decreases, the other increases)
+
+
+#### Specificity vs Sensitivity
+
+- Sensitivity: Of all the observations that were actually 1, how many did the model accurately predict?
+  - Calculation: True Positive / (True Positive + False Negative)
+- Specificity: Of all the observations that were actually 0, how many did the model accurately predict?
+  - Calculation: True Negative / (True Negative + False Positive) 
+- Precision: Of all the observations that were predicted to be 1, how many did the model accurately catch?
+  - Calculation: True Positive / (True Positive + True Negative)
+- Accuracy: How accurately did the model predict true positives and negatives?
+
+
