@@ -16,6 +16,7 @@ Reviewed Poisson models and introduced logistic regression, using recidivism as 
 - Probability: percent chance of happening
 - Odds: P/(1-P)
   - "How many more times is a specific outcome likely to happen again"
+  - The probability something will happen divided by the probability that it will not happen
 - Ex: If probability = 80%, then the odds = 4
 - Ex: If probability = 50%, then the odds = 1 (i.e. even odds)
 - Ex: If probability = 45%, then the odds = 0.835
