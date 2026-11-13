@@ -1,0 +1,44 @@
+---
+title: "Week 11: ROC Curves"
+description: "Continuing Logistic Regression & Predicting Recidivism"
+date: 2026-11-13
+---
+
+## What We Did
+
+Reviewed logistic regression and learned about ROC curves.
+
+## Key Concepts
+
+#### Specificity vs Sensitivity Review:
+
+- Sensitivity is about true positives, specificity is about true negatives 
+- If we lower the cutoff threshold (for determining 0 vs 1 designation), sensitivity will go up
+  - High sensitivity is basically a "better safe than sorry" approach to an issue
+  - Sensitivity is also the same as the true positive rate
+- If we raise the cutoff threshold, specificity will go up
+  - Specificity is NOT the same as the false positive rate
+
+"Accuracy is a farce" because it does not consider what types of errors occurred 
+
+- A model can have high accuracy (i.e. lowest number of errors), but not be the "best" model because it has a high number of false negatives (which in some contexts is very bad)
+
+
+#### ROC (Receiving Operator Characteristic) Curves
+
+- Developed from analysis of radar accuracy during WWII
+- Graph of false positive rate vs true positive rate
+- Used to judge how good a model is 
+  - Want to maximize the area under the curve
+  - If an ROC looks like a straight line, then the model is no better than a coin-flip (an area of 0.5)
+- If TPR = 1 and FPR = 0, then the model has accurately predicted all 1s and has made no errors (unattainable perfection)
+  - The point in the curve that is closest to (0,1) is the most (numerically) equal trade-off between FPR and TPR
+  - A result too close to perfection might signal over-fitting
+- If TPR = 0 and FPR = 0, then the model has flagged all observations as 0
+- If the TPR = 1 and FPR = 1, then the model has flagged all observations as 1
+
+```{r}
+knitr::include_graphics("C:/Users/lbush/Documents/UPenn Stuff/MUSA-5080-portfolio/weekly-notes/ROC_curve.webp")
+```
+
+

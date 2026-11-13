@@ -22,9 +22,9 @@ Reviewed Poisson models and introduced logistic regression, using recidivism as 
 - Ex: If probability = 45%, then the odds = 0.835
   - Could be interpreted as: For every 100 people not sick with the flu, 84 are 
 - Convert probability into log-odds to be able to use GLM
-- Interpretation: Log-odds > 0 means odds > 1, which means probability > 50% (i.e. more likely than not)
+- Interpretation: Log-odds > 0 means odds-ratio > 1, which means probability > 50% (i.e. more likely than not)
   - (Odds − 1) × 100 = percent change in the odds
-  - If log-odds are 0.16, then the odds are 1.17, which means that the odds increased by 17%
+  - If log-odds are 0.16, then the odds-ratio is 1.17, which means that the odds increased by 17%
   
 
 |Probability| Odds | Log-Odds |
