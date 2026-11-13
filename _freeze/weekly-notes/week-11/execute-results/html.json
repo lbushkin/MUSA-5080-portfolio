@@ -1,0 +1,15 @@
+{
+  "hash": "fc800eb13cdacc6a248f59fa98e908ec",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Week 11: ROC Curves\"\ndescription: \"Continuing Logistic Regression & Predicting Recidivism\"\ndate: 2026-11-13\n---\n\n## What We Did\n\nReviewed logistic regression and learned about ROC curves.\n\n## Key Concepts\n\n#### Specificity vs Sensitivity Review:\n\n- Sensitivity is about true positives, specificity is about true negatives \n- If we lower the cutoff threshold (for determining 0 vs 1 designation), sensitivity will go up\n  - High sensitivity is basically a \"better safe than sorry\" approach to an issue\n  - Sensitivity is also the same as the true positive rate\n- If we raise the cutoff threshold, specificity will go up\n  - Specificity is NOT the same as the false positive rate\n\n\"Accuracy is a farce\" because it does not consider what types of errors occurred \n\n- A model can have high accuracy (i.e. lowest number of errors), but not be the \"best\" model because it has a high number of false negatives (which in some contexts is very bad)\n\n\n#### ROC (Receiving Operator Characteristic) Curves\n\n- Developed from analysis of radar accuracy during WWII\n- Graph of false positive rate vs true positive rate\n- Used to judge how good a model is \n  - Want to maximize the area under the curve\n  - If an ROC looks like a straight line, then the model is no better than a coin-flip (an area of 0.5)\n- If TPR = 1 and FPR = 0, then the model has accurately predicted all 1s and has made no errors (unattainable perfection)\n  - The point in the curve that is closest to (0,1) is the most (numerically) equal trade-off between FPR and TPR\n  - A result too close to perfection might signal over-fitting\n- If TPR = 0 and FPR = 0, then the model has flagged all observations as 0\n- If the TPR = 1 and FPR = 1, then the model has flagged all observations as 1\n\n\n::: {.cell}\n\n```{.r .cell-code}\nknitr::include_graphics(\"weekly-notes/ROC_curve.png\")\n```\n\n::: {.cell-output-display}\n![](weekly-notes/ROC_curve.png)\n:::\n:::\n\n\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

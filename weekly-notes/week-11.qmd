@@ -38,7 +38,7 @@ Reviewed logistic regression and learned about ROC curves.
 - If the TPR = 1 and FPR = 1, then the model has flagged all observations as 1
 
 ```{r}
-knitr::include_graphics("C:/Users/lbush/Documents/UPenn Stuff/MUSA-5080-portfolio/weekly-notes/ROC_curve.webp")
+knitr::include_graphics("weekly-notes/ROC_curve.png")
 ```
 
 
