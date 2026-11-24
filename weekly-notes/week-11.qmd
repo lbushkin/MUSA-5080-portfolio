@@ -17,7 +17,7 @@ Reviewed logistic regression and learned about ROC curves.
   - High sensitivity is basically a "better safe than sorry" approach to an issue
   - Sensitivity is also the same as the true positive rate
 - If we raise the cutoff threshold, specificity will go up
-  - Specificity is NOT the same as the false positive rate
+  - Specificity is NOT the same as the false positive rate (it is the true negative rate)
 
 "Accuracy is a farce" because it does not consider what types of errors occurred 
 
