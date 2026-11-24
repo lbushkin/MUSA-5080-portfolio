@@ -58,9 +58,9 @@ A few things to know before you start:
 #| label: setup
 library(tidyverse)
 
-nij <- read_csv("C:/Users/lbush/Documents/UPenn Stuff/MUSA-5080-portfolio/assignments/assignment6_files/nij_recidivism.csv") %>%
+nij <- read_csv(here::here("assignments", "assignment6_files", "nij_recidivism.csv")) %>%
   mutate(
-    recid              = as.integer(Recidivism_Within_3years),
+    recid              = as.integer(Recidivism_Within_3years == "Yes"),
     male               = as.integer(Gender == "M"),
     age_group          = factor(Age_at_Release),
     prison_years       = factor(Prison_Years,
@@ -140,6 +140,7 @@ Start from this model.
 
 ```{r}
 #| label: base-model
+
 base_fit <- glm(recid ~ male + age_group + prison_years +
                   prior_fel_arrests + prior_misd_arrests,
                 family = binomial,
