@@ -2,6 +2,9 @@
 title: "Week 11: ROC Curves"
 description: "Continuing Logistic Regression & Predicting Recidivism"
 date: 2026-11-13
+format:
+    html:
+      embed-resources: true
 ---
 
 ## What We Did
@@ -38,6 +41,8 @@ Reviewed logistic regression and learned about ROC curves.
 - If the TPR = 1 and FPR = 1, then the model has flagged all observations as 1
 
 ```{r}
+#| echo: false
+
 knitr::include_graphics("weekly-notes/ROC_curve.png")
 ```
 
