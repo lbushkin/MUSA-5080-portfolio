@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Team Red-Purple: Jonah, Luca, Rita, Ryska">
-<meta name="dcterms.date" content="2026-10-30">
+<meta name="dcterms.date" content="2026-11-06">
 
 <title>Assignment 5: House Price Prediction, Chicago – Luca Bushkin - MUSA 5080 Portfolio</title>
 <style>
@@ -4160,7 +4160,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 30, 2026</p>
+      <p class="date">November 6, 2026</p>
     </div>
   </div>
   
@@ -4876,7 +4876,7 @@ F-statistic:  3292 on 10 and 22840 DF,  p-value: &lt; 0.00000000000000022</code>
 <pre><code>Reading layer `query&#39; from data source 
   `https://data.cityofchicago.org/api/v3/views/qnjv-hj2q/query.geojson&#39; 
   using driver `GeoJSON&#39;
-Simple feature collection with 1131 features and 30 fields
+Simple feature collection with 1137 features and 30 fields
 Geometry type: POINT
 Dimension:     XY
 Bounding box:  xmin: -87.82167 ymin: 41.69147 xmax: -87.53513 ymax: 42.01741
@@ -4904,41 +4904,41 @@ lm(formula = f4, data = train_set)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--2274144  -123721    -1389   110342 20817561 
+-2274548  -123715    -1400   110313 20817863 
 
 Coefficients:
                                     Estimate   Std. Error t value
-(Intercept)                      320134.3907   49628.0173   6.451
-I(building_age^2)                    32.2093       2.0496  15.715
-building_age                      -6649.4682     335.2143 -19.836
-Cat_bedroom_num3 bedrooms        -96986.4747    5551.5295 -17.470
-Cat_bedroom_num4-5 bedrooms     -155242.7066    7842.7565 -19.794
-Cat_bedroom_num6+ bedrooms        18806.7798   21174.0615   0.888
-Cat_fireplaces_num1 fireplace     16700.1962    7138.4607   2.339
-Cat_fireplaces_num2+ fireplaces  358916.2075   13307.5594  26.971
-building_sf                         447.1566       5.0868  87.906
-log_lotsize_sqft                  43020.1773    6492.9244   6.626
-log1p(dist_Lstation)             -50379.5244    2969.0593 -16.968
-dist_cafe_seat                      -12.6259       0.3623 -34.849
+(Intercept)                      319187.1693   49645.3680   6.429
+I(building_age^2)                    32.1290       2.0501  15.672
+building_age                      -6637.1746     335.2953 -19.795
+Cat_bedroom_num3 bedrooms        -97177.5241    5552.3551 -17.502
+Cat_bedroom_num4-5 bedrooms     -155509.3626    7844.0058 -19.825
+Cat_bedroom_num6+ bedrooms        18585.6371   21177.6488   0.878
+Cat_fireplaces_num1 fireplace     16703.6864    7139.7408   2.340
+Cat_fireplaces_num2+ fireplaces  359205.1094   13309.8317  26.988
+building_sf                         447.3945       5.0870  87.948
+log_lotsize_sqft                  42901.5462    6493.9528   6.606
+log1p(dist_Lstation)             -50292.5853    2970.4864 -16.931
+dist_cafe_seat                      -12.5745       0.3621 -34.728
                                             Pr(&gt;|t|)    
-(Intercept)                          0.0000000001136 ***
+(Intercept)                          0.0000000001307 ***
 I(building_age^2)               &lt; 0.0000000000000002 ***
 building_age                    &lt; 0.0000000000000002 ***
 Cat_bedroom_num3 bedrooms       &lt; 0.0000000000000002 ***
 Cat_bedroom_num4-5 bedrooms     &lt; 0.0000000000000002 ***
-Cat_bedroom_num6+ bedrooms                    0.3744    
+Cat_bedroom_num6+ bedrooms                    0.3802    
 Cat_fireplaces_num1 fireplace                 0.0193 *  
 Cat_fireplaces_num2+ fireplaces &lt; 0.0000000000000002 ***
 building_sf                     &lt; 0.0000000000000002 ***
-log_lotsize_sqft                     0.0000000000353 ***
+log_lotsize_sqft                     0.0000000000402 ***
 log1p(dist_Lstation)            &lt; 0.0000000000000002 ***
 dist_cafe_seat                  &lt; 0.0000000000000002 ***
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 
-Residual standard error: 332100 on 22839 degrees of freedom
-Multiple R-squared:  0.6111,    Adjusted R-squared:  0.6109 
-F-statistic:  3262 on 11 and 22839 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+Residual standard error: 332200 on 22839 degrees of freedom
+Multiple R-squared:  0.611, Adjusted R-squared:  0.6108 
+F-statistic:  3261 on 11 and 22839 DF,  p-value: &lt; 0.00000000000000022</code></pre>
 </div>
 <details open class="code-fold">
 <summary>Show code</summary>
@@ -4949,7 +4949,7 @@ F-statistic:  3262 on 11 and 22839 DF,  p-value: &lt; 0.00000000000000022</code>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>statistic 
-0.3202554 </code></pre>
+0.3203057 </code></pre>
 </div>
 <details open class="code-fold">
 <summary>Show code</summary>
@@ -4976,10 +4976,10 @@ F-statistic:  3262 on 11 and 22839 DF,  p-value: &lt; 0.00000000000000022</code>
 1 m1    Baseline                    349355.    0.356   0.002 Squared building a…
 2 m2    Transformed Baseline        335668.    0.331   0.002 transformed baseli…
 3 m3    Station distance            331202.    0.335   0.002 Proximity to L met…
-4 m4    Distance to outdoor seating 321916.    0.320   0.002 + cafe seat        </code></pre>
+4 m4    Distance to outdoor seating 321980.    0.320   0.002 + cafe seat        </code></pre>
 </div>
 </div>
-<p>However, to our surprise, proximity to outdoor seating is not a significant predictor in our model. The CV-RMSE for the Distance to outdoor seating model is $321,916, and Moran’s I is 0.32. Both indicators worsened from the last model.</p>
+<p>However, to our surprise, proximity to outdoor seating is not a significant predictor in our model. The CV-RMSE for the Distance to outdoor seating model is $321,980, and Moran’s I is 0.32. Both indicators worsened from the last model.</p>
 </section>
 <section id="bus-stops" class="level3">
 <h3 class="anchored" data-anchor-id="bus-stops">Bus stops</h3>
@@ -5026,34 +5026,34 @@ lm(formula = f5, data = train_set)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--2276025  -123673     -948   110183 20818189 
+-2276427  -123480     -917   110231 20818492 
 
 Coefficients:
                                     Estimate   Std. Error t value
-(Intercept)                      333853.8687   49958.9444   6.683
-I(building_age^2)                    32.5749       2.0552  15.850
-building_age                      -6689.5360     335.6057 -19.933
-Cat_bedroom_num3 bedrooms        -97110.4367    5551.2133 -17.494
-Cat_bedroom_num4-5 bedrooms     -155358.7768    7842.1150 -19.811
-Cat_bedroom_num6+ bedrooms        18497.9181   21172.3178   0.874
-Cat_fireplaces_num1 fireplace     16277.6143    7139.9609   2.280
-Cat_fireplaces_num2+ fireplaces  358578.2090   13306.9748  26.947
-building_sf                         447.2290       5.0864  87.927
-log_lotsize_sqft                  41107.2325    6542.1664   6.283
-log1p(dist_Lstation)             -51110.2618    2984.7004 -17.124
-dist_cafe_seat                      -12.6591       0.3625 -34.918
-bus_knn5                             10.4539       4.4073   2.372
+(Intercept)                      332905.0252   49975.9086   6.661
+I(building_age^2)                    32.4945       2.0557  15.807
+building_age                      -6677.2162     335.6858 -19.891
+Cat_bedroom_num3 bedrooms        -97301.9310    5552.0401 -17.525
+Cat_bedroom_num4-5 bedrooms     -155626.0924    7843.3652 -19.842
+Cat_bedroom_num6+ bedrooms        18276.5586   21175.9035   0.863
+Cat_fireplaces_num1 fireplace     16280.7524    7141.2424   2.280
+Cat_fireplaces_num2+ fireplaces  358867.6392   13309.2430  26.964
+building_sf                         447.4670       5.0866  87.970
+log_lotsize_sqft                  40987.8987    6543.1953   6.264
+log1p(dist_Lstation)             -51023.0214    2986.0977 -17.087
+dist_cafe_seat                      -12.6078       0.3623 -34.797
+bus_knn5                             10.4587       4.4081   2.373
                                             Pr(&gt;|t|)    
-(Intercept)                           0.000000000024 ***
+(Intercept)                          0.0000000000278 ***
 I(building_age^2)               &lt; 0.0000000000000002 ***
 building_age                    &lt; 0.0000000000000002 ***
 Cat_bedroom_num3 bedrooms       &lt; 0.0000000000000002 ***
 Cat_bedroom_num4-5 bedrooms     &lt; 0.0000000000000002 ***
-Cat_bedroom_num6+ bedrooms                    0.3823    
+Cat_bedroom_num6+ bedrooms                    0.3881    
 Cat_fireplaces_num1 fireplace                 0.0226 *  
 Cat_fireplaces_num2+ fireplaces &lt; 0.0000000000000002 ***
 building_sf                     &lt; 0.0000000000000002 ***
-log_lotsize_sqft                      0.000000000337 ***
+log_lotsize_sqft                     0.0000000003814 ***
 log1p(dist_Lstation)            &lt; 0.0000000000000002 ***
 dist_cafe_seat                  &lt; 0.0000000000000002 ***
 bus_knn5                                      0.0177 *  
@@ -5061,8 +5061,8 @@ bus_knn5                                      0.0177 *
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 
 Residual standard error: 332100 on 22838 degrees of freedom
-Multiple R-squared:  0.6112,    Adjusted R-squared:  0.611 
-F-statistic:  2992 on 12 and 22838 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+Multiple R-squared:  0.611, Adjusted R-squared:  0.6108 
+F-statistic:  2990 on 12 and 22838 DF,  p-value: &lt; 0.00000000000000022</code></pre>
 </div>
 <details open class="code-fold">
 <summary>Show code</summary>
@@ -5073,7 +5073,7 @@ F-statistic:  2992 on 12 and 22838 DF,  p-value: &lt; 0.00000000000000022</code>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>statistic 
-0.3201663 </code></pre>
+0.3202168 </code></pre>
 </div>
 <details open class="code-fold">
 <summary>Show code</summary>
@@ -5100,11 +5100,11 @@ F-statistic:  2992 on 12 and 22838 DF,  p-value: &lt; 0.00000000000000022</code>
 1 m1    Baseline                    349355.    0.356   0.002 Squared building a…
 2 m2    Transformed Baseline        335668.    0.331   0.002 transformed baseli…
 3 m3    Station distance            331202.    0.335   0.002 Proximity to L met…
-4 m4    Distance to outdoor seating 321916.    0.320   0.002 + cafe seat        
-5 m5    Bus Stops                   321878.    0.320   0.002 + bus knn5         </code></pre>
+4 m4    Distance to outdoor seating 321980.    0.320   0.002 + cafe seat        
+5 m5    Bus Stops                   321942.    0.320   0.002 + bus knn5         </code></pre>
 </div>
 </div>
-<p>Like with outdoor seating, the average distance to the 5 closest bus stops is not a significant predictor in our model. The CV-RMSE for the Bus Stops model is $321,878, and Moran’s I is 0.32. As a result, we decided not to include the average distance to 5 closest bus stops in our following models.</p>
+<p>Like with outdoor seating, the average distance to the 5 closest bus stops is not a significant predictor in our model. The CV-RMSE for the Bus Stops model is $321,942, and Moran’s I is 0.32. As a result, we decided not to include the average distance to 5 closest bus stops in our following models.</p>
 </section>
 <section id="crime" class="level3">
 <h3 class="anchored" data-anchor-id="crime">Crime</h3>
@@ -5236,8 +5236,8 @@ F-statistic:  3122 on 11 and 22839 DF,  p-value: &lt; 0.00000000000000022</code>
 1 m1    Baseline                    349355.    0.356   0.002 Squared building a…
 2 m2    Transformed Baseline        335668.    0.331   0.002 transformed baseli…
 3 m3    Station distance            331202.    0.335   0.002 Proximity to L met…
-4 m4    Distance to outdoor seating 321916.    0.320   0.002 + cafe seat        
-5 m5    Bus Stops                   321878.    0.320   0.002 + bus knn5         
+4 m4    Distance to outdoor seating 321980.    0.320   0.002 + cafe seat        
+5 m5    Bus Stops                   321942.    0.320   0.002 + bus knn5         
 6 m6    Crime                       326738.    0.315   0.002 + crime            </code></pre>
 </div>
 </div>
@@ -5523,8 +5523,8 @@ F-statistic:  2866 on 16 and 22834 DF,  p-value: &lt; 0.00000000000000022</code>
 1 m1    Baseline                    349355.    0.356   0.002 Squared building a…
 2 m2    Transformed Baseline        335668.    0.331   0.002 transformed baseli…
 3 m3    Station distance            331202.    0.335   0.002 Proximity to L met…
-4 m4    Distance to outdoor seating 321916.    0.320   0.002 + cafe seat        
-5 m5    Bus Stops                   321878.    0.320   0.002 + bus knn5         
+4 m4    Distance to outdoor seating 321980.    0.320   0.002 + cafe seat        
+5 m5    Bus Stops                   321942.    0.320   0.002 + bus knn5         
 6 m6    Crime                       326738.    0.315   0.002 + crime            
 7 m7    Income                      306497.    0.289   0.002 + tract income     
 8 m8    Demographics                295286.    0.267   0.002 + Higher edu, elde…
@@ -5658,8 +5658,8 @@ F-statistic:  2750 on 17 and 22833 DF,  p-value: &lt; 0.00000000000000022</code>
  1 m1    Baseline                    349355.    0.356   0.002 Squared building …
  2 m2    Transformed Baseline        335668.    0.331   0.002 transformed basel…
  3 m3    Station distance            331202.    0.335   0.002 Proximity to L me…
- 4 m4    Distance to outdoor seating 321916.    0.320   0.002 + cafe seat       
- 5 m5    Bus Stops                   321878.    0.320   0.002 + bus knn5        
+ 4 m4    Distance to outdoor seating 321980.    0.320   0.002 + cafe seat       
+ 5 m5    Bus Stops                   321942.    0.320   0.002 + bus knn5        
  6 m6    Crime                       326738.    0.315   0.002 + crime           
  7 m7    Income                      306497.    0.289   0.002 + tract income    
  8 m8    Demographics                295286.    0.267   0.002 + Higher edu, eld…
@@ -6004,8 +6004,8 @@ F-statistic: 543.2 on 104 and 22746 DF,  p-value: &lt; 0.00000000000000022</code
  1 m1    Baseline                    349355.    0.356   0.002 &quot;Squared building…
  2 m2    Transformed Baseline        335668.    0.331   0.002 &quot;transformed base…
  3 m3    Station distance            331202.    0.335   0.002 &quot;Proximity to L m…
- 4 m4    Distance to outdoor seating 321916.    0.320   0.002 &quot;+ cafe seat&quot;     
- 5 m5    Bus Stops                   321878.    0.320   0.002 &quot;+ bus knn5&quot;      
+ 4 m4    Distance to outdoor seating 321980.    0.320   0.002 &quot;+ cafe seat&quot;     
+ 5 m5    Bus Stops                   321942.    0.320   0.002 &quot;+ bus knn5&quot;      
  6 m6    Crime                       326738.    0.315   0.002 &quot;+ crime&quot;         
  7 m7    Income                      306497.    0.289   0.002 &quot;+ tract income&quot;  
  8 m8    Demographics                295286.    0.267   0.002 &quot;+ Higher edu, el…
@@ -6065,8 +6065,8 @@ F-statistic: 543.2 on 104 and 22746 DF,  p-value: &lt; 0.00000000000000022</code
  1 m1    Baseline                    349355.    0.356   0.002 &quot;Squared building…
  2 m2    Transformed Baseline        335668.    0.331   0.002 &quot;transformed base…
  3 m3    Station distance            331202.    0.335   0.002 &quot;Proximity to L m…
- 4 m4    Distance to outdoor seating 321916.    0.320   0.002 &quot;+ cafe seat&quot;     
- 5 m5    Bus Stops                   321878.    0.320   0.002 &quot;+ bus knn5&quot;      
+ 4 m4    Distance to outdoor seating 321980.    0.320   0.002 &quot;+ cafe seat&quot;     
+ 5 m5    Bus Stops                   321942.    0.320   0.002 &quot;+ bus knn5&quot;      
  6 m6    Crime                       326738.    0.315   0.002 &quot;+ crime&quot;         
  7 m7    Income                      306497.    0.289   0.002 &quot;+ tract income&quot;  
  8 m8    Demographics                295286.    0.267   0.002 &quot;+ Higher edu, el…
@@ -6291,8 +6291,36 @@ F-statistic: 543.2 on 104 and 22746 DF,  p-value: &lt; 0.00000000000000022</code
 <p>Finally, while a tax assessment model may help people lower their taxes, if it is an open source government model, it could be used by for-profit real estate companies to “game the market” in order to aquire under-taxed homes. There is no such thing as no-strings-attached in the real estate market.</p>
 <section id="who-did-what" class="level3">
 <h3 class="anchored" data-anchor-id="who-did-what">Who did what</h3>
-<div class="line-block">Name | Main contribution|</div>
-<p>|Luca | Looked at some variables independently and contributed to the final model; reviewed file before submission| |Jonah | Looked at some variables independently and contributed to the final model; added some reflection text | |Rita | Looked at some variables independently and contributed to the final model; created main file | |Ryska | Looked at some variables independently and contributed to the final model; reviewed file before submission|</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th style="text-align: right;">Main contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Luca</td>
+<td style="text-align: right;">Looked at some variables independently and contributed to the final model; reviewed file before submission</td>
+</tr>
+<tr class="even">
+<td>Jonah</td>
+<td style="text-align: right;">Looked at some variables independently and contributed to the final model; added some reflection text</td>
+</tr>
+<tr class="odd">
+<td>Rita</td>
+<td style="text-align: right;">Looked at some variables independently and contributed to the final model; created main file</td>
+</tr>
+<tr class="even">
+<td>Ryska</td>
+<td style="text-align: right;">Looked at some variables independently and contributed to the final model; reviewed file before submission</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="ai-team-statement" class="level3">
 <h3 class="anchored" data-anchor-id="ai-team-statement">AI Team Statement</h3>
@@ -7902,16 +7930,17 @@ F-statistic: 543.2 on 104 and 22746 DF,  p-value: &lt; 0.00000000000000022</code
 <span id="cb119-1195"><a href="#cb119-1195" aria-hidden="true" tabindex="-1"></a><span class="fu">### Who did what</span></span>
 <span id="cb119-1196"><a href="#cb119-1196" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb119-1197"><a href="#cb119-1197" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Name <span class="pp">|</span> Main contribution<span class="pp">|</span></span>
-<span id="cb119-1198"><a href="#cb119-1198" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Luca  <span class="pp">|</span> Looked at some variables independently and contributed to the final model; reviewed file before submission<span class="pp">|</span></span>
-<span id="cb119-1199"><a href="#cb119-1199" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Jonah <span class="pp">|</span> Looked at some variables independently and contributed to the final model; added some reflection text     <span class="pp">|</span></span>
-<span id="cb119-1200"><a href="#cb119-1200" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Rita  <span class="pp">|</span> Looked at some variables independently and contributed to the final model; created main file              <span class="pp">|</span></span>
-<span id="cb119-1201"><a href="#cb119-1201" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Ryska <span class="pp">|</span> Looked at some variables independently and contributed to the final model; reviewed file before submission<span class="pp">|</span></span>
-<span id="cb119-1202"><a href="#cb119-1202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-1198"><a href="#cb119-1198" aria-hidden="true" tabindex="-1"></a><span class="pp">| ---</span> <span class="pp">| ---:</span> <span class="pp">|</span></span>
+<span id="cb119-1199"><a href="#cb119-1199" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Luca  <span class="pp">|</span> Looked at some variables independently and contributed to the final model; reviewed file before submission<span class="pp">|</span></span>
+<span id="cb119-1200"><a href="#cb119-1200" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Jonah <span class="pp">|</span> Looked at some variables independently and contributed to the final model; added some reflection text     <span class="pp">|</span></span>
+<span id="cb119-1201"><a href="#cb119-1201" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Rita  <span class="pp">|</span> Looked at some variables independently and contributed to the final model; created main file              <span class="pp">|</span></span>
+<span id="cb119-1202"><a href="#cb119-1202" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span>Ryska <span class="pp">|</span> Looked at some variables independently and contributed to the final model; reviewed file before submission<span class="pp">|</span></span>
 <span id="cb119-1203"><a href="#cb119-1203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb119-1204"><a href="#cb119-1204" aria-hidden="true" tabindex="-1"></a><span class="fu">### AI Team Statement</span></span>
-<span id="cb119-1205"><a href="#cb119-1205" aria-hidden="true" tabindex="-1"></a>What was your team&#39;s AI policy and how was AI used in this assignment? </span>
-<span id="cb119-1206"><a href="#cb119-1206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb119-1207"><a href="#cb119-1207" aria-hidden="true" tabindex="-1"></a>We used AI for coding questions but did not really utilize AI coding in our assignment.</span>
+<span id="cb119-1204"><a href="#cb119-1204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-1205"><a href="#cb119-1205" aria-hidden="true" tabindex="-1"></a><span class="fu">### AI Team Statement</span></span>
+<span id="cb119-1206"><a href="#cb119-1206" aria-hidden="true" tabindex="-1"></a>What was your team&#39;s AI policy and how was AI used in this assignment? </span>
+<span id="cb119-1207"><a href="#cb119-1207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-1208"><a href="#cb119-1208" aria-hidden="true" tabindex="-1"></a>We used AI for coding questions but did not really utilize AI coding in our assignment.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
